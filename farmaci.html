@@ -1,0 +1,2614 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestione Terapia Farmacologica</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      color: #1a2a3a;
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #1a6fa8, #0d4c7a);
+      color: white;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    header .icon { font-size: 2rem; }
+    header h1   { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.5px; }
+    header p    { font-size: 0.85rem; opacity: 0.85; margin-top: 2px; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 28px 20px; }
+
+    /* ---- Cards sommario ---- */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .card .num { font-size: 2rem; font-weight: 800; }
+    .card .lbl { font-size: 0.75rem; color: #666; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .card.ok    .num { color: #2e9e5b; }
+    .card.warn  .num { color: #e07b00; }
+    .card.crit  .num { color: #d03030; }
+    .card.total .num { color: #1a6fa8; }
+
+    /* ---- Banner allarmi ---- */
+    .alert-banner {
+      background: #fff3cd;
+      border-left: 5px solid #e07b00;
+      border-radius: 8px;
+      padding: 13px 18px;
+      margin-bottom: 20px;
+      display: none;
+      font-size: 0.9rem;
+      line-height: 1.8;
+    }
+    .banner-title { font-weight: 700; color: #b05a00; margin-bottom: 4px; font-size: 0.95rem; }
+
+    /* ---- Form aggiungi ---- */
+    .form-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px 22px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.09);
+      margin-bottom: 24px;
+    }
+    .form-toggle {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+    .form-toggle h2 { font-size: 1rem; color: #1a6fa8; font-weight: 700; }
+    .form-toggle .chevron { transition: transform 0.2s; }
+    .form-body { margin-top: 16px; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 2.2fr 1fr 1fr 1fr 2fr;
+      gap: 11px;
+      align-items: end;
+    }
+    @media (max-width: 750px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+
+    .field label {
+      display: block;
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: #556;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .field input {
+      width: 100%;
+      border: 1.5px solid #d0d8e4;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 0.88rem;
+      color: #1a2a3a;
+      transition: border-color 0.2s;
+      background: #fafcff;
+    }
+    .field input:focus { outline: none; border-color: #1a6fa8; background: white; }
+    .field .hint { font-size: 0.71rem; color: #9aabb0; margin-top: 4px; font-style: italic; }
+
+    .form-actions { display: flex; gap: 10px; margin-top: 14px; }
+
+    .btn {
+      padding: 9px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.87rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-primary   { background: #1a6fa8; color: white; }
+    .btn-primary:hover   { background: #155d8e; }
+    .btn-secondary { background: #e8eef5; color: #1a6fa8; }
+    .btn-secondary:hover { background: #d4dfe9; }
+    .btn-danger    { background: #fde8e8; color: #c0392b; }
+    .btn-danger:hover    { background: #f9d0d0; }
+    .btn-sm { padding: 5px 11px; font-size: 0.78rem; border-radius: 6px; }
+    .btn-xs { padding: 3px 8px;  font-size: 0.73rem; border-radius: 5px; }
+
+    /* ---- Tabella ---- */
+    .table-card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.09);
+      overflow: hidden;
+    }
+    .table-header {
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1.5px solid #edf2f7;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .table-header h2 { font-size: 1rem; font-weight: 700; }
+
+    .search-box {
+      border: 1.5px solid #d0d8e4;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      width: 200px;
+      background: #fafcff;
+    }
+    .search-box:focus { outline: none; border-color: #1a6fa8; }
+
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 860px; }
+    thead th {
+      background: #f5f8fc;
+      padding: 10px 13px;
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #5a6a7a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1.5px solid #e8eef5;
+      white-space: nowrap;
+    }
+    thead th.sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th.sortable:hover {
+      background: #eaf0f8;
+      color: #1a6fa8;
+    }
+    thead th.sort-asc::after  { content: ' ▲'; color: #1a6fa8; font-size: 0.65rem; }
+    thead th.sort-desc::after { content: ' ▼'; color: #1a6fa8; font-size: 0.65rem; }
+    tbody tr { border-bottom: 1px solid #f0f4f8; transition: background 0.12s; }
+    tbody tr:hover { background: #f8fbff; }
+    tbody tr:last-child { border-bottom: none; }
+    td { padding: 10px 13px; font-size: 0.86rem; vertical-align: middle; }
+
+    /* Nomi farmaci */
+    .drug-name { font-weight: 600; }
+    .badge-dpc {
+      display: inline-block;
+      background: #e8e0ff;
+      color: #5a3db0;
+      font-size: 0.67rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 5px;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    .badge-nosub {
+      display: inline-block;
+      background: #ffecd4;
+      color: #9a5000;
+      font-size: 0.67rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 3px;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    .badge-pt {
+      display: inline-block;
+      background: #d4f0ff;
+      color: #004a80;
+      font-size: 0.67rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 3px;
+      vertical-align: middle;
+      white-space: nowrap;
+      border: 1px solid #70b8e0;
+    }
+
+    /* Quantità con quick-update */
+    .qty-wrap { display: flex; flex-direction: column; gap: 4px; }
+    .qty-val  { font-weight: 700; font-size: 0.95rem; }
+    .qty-sub  { font-size: 0.72rem; color: #9aabb0; }
+    .quick-row { display: flex; align-items: center; gap: 5px; }
+    .quick-lbl { font-size: 0.7rem; color: #9aabb0; white-space: nowrap; }
+    .quick-input {
+      width: 60px;
+      border: 1.5px solid #d0d8e4;
+      border-radius: 6px;
+      padding: 4px 7px;
+      font-size: 0.8rem;
+      background: #fafcff;
+      text-align: center;
+    }
+    .quick-input:focus { outline: none; border-color: #1a6fa8; }
+
+    /* Pill stato */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.77rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .pill.ok   { background: #d4f4e3; color: #1a7a44; }
+    .pill.warn { background: #fff0d4; color: #a05c00; }
+    .pill.crit { background: #fde0e0; color: #b02020; }
+
+    .days-num      { font-weight: 700; font-size: 0.95rem; }
+    .days-ok   { color: #2e9e5b; }
+    .days-warn { color: #e07b00; }
+    .days-crit { color: #d03030; }
+
+    .note-cell { color: #667; font-size: 0.78rem; line-height: 1.45; max-width: 210px; }
+
+    .empty-state { text-align: center; padding: 50px 20px; color: #8a9ab0; }
+    .empty-state .big-icon { font-size: 3rem; margin-bottom: 12px; }
+
+    /* Inline edit */
+    tr.editing { background: #f0f8ff !important; }
+    tr.editing input {
+      border: 1.5px solid #1a6fa8;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 0.82rem;
+      background: white;
+    }
+    tr.editing input[type="number"] { width: 75px; }
+    tr.editing input[type="text"]   { min-width: 120px; }
+
+    /* Footer */
+    footer { text-align: center; margin-top: 32px; color: #a0b0c0; font-size: 0.78rem; }
+    footer span { background: white; padding: 3px 14px; border-radius: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+
+    /* Modale TXT */
+    .txt-modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      z-index: 9999; align-items: center; justify-content: center; padding: 16px;
+    }
+    .txt-modal-overlay.open { display: flex; }
+    .txt-modal {
+      background: white; border-radius: 14px; width: 100%; max-width: 680px;
+      max-height: 90vh; display: flex; flex-direction: column;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+    }
+    .txt-modal-header {
+      padding: 14px 18px; border-bottom: 1px solid #e8eef5;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .txt-modal-header h3 { font-size: 0.95rem; font-weight: 700; color: #2d3748; }
+    .txt-modal-body { padding: 14px 18px; flex: 1; overflow-y: auto; }
+    .txt-modal-body textarea {
+      width: 100%; height: 340px; font-family: 'Courier New', monospace;
+      font-size: 0.75rem; border: 1.5px solid #dde5ef; border-radius: 8px;
+      padding: 10px 12px; resize: none; background: #fafcff; color: #2d3748;
+      line-height: 1.5;
+    }
+    .txt-modal-footer {
+      padding: 12px 18px; border-top: 1px solid #e8eef5;
+      display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;
+    }
+
+    /* Modale Richiesta Hydrocortisone */
+    .richiesta-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      z-index: 9999; align-items: flex-start; justify-content: center;
+      padding: 16px;
+      padding-top: max(24px, calc(env(safe-area-inset-top) + 16px));
+      overflow-y: auto;
+    }
+    .richiesta-overlay.open { display: flex; }
+    .richiesta-modal {
+      background: white; border-radius: 14px; width: 100%; max-width: 760px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25); margin: auto;
+    }
+    .richiesta-header {
+      padding: 14px 18px; border-bottom: 1px solid #e8eef5;
+      display: flex; align-items: center; justify-content: space-between;
+      border-radius: 14px 14px 0 0; background: #1a3a5c;
+    }
+    .richiesta-header h3 { font-size: 0.95rem; font-weight: 700; color: white; }
+    .richiesta-body { padding: 28px 32px; font-size: 0.88rem; line-height: 1.8; color: #1a1a1a; }
+    .richiesta-footer {
+      padding: 12px 18px; border-top: 1px solid #e8eef5;
+      display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;
+      border-radius: 0 0 14px 14px;
+    }
+    /* Form del modulo */
+    .req-dest { text-align: right; font-size: 0.82rem; margin-bottom: 24px; line-height: 1.6; }
+    .req-body { margin-bottom: 18px; }
+    .req-field { border: none; border-bottom: 1px solid #333; min-width: 200px; display: inline-block; padding: 0 2px; }
+    .req-section-title { text-align: center; font-weight: 700; font-size: 0.95rem; margin: 16px 0 12px; letter-spacing: 0.04em; }
+    .req-drug { font-weight: 700; font-size: 0.95rem; }
+    .req-qty { border-bottom: 1px solid #333; display: inline-block; min-width: 260px; }
+    .req-checkboxes { margin: 10px 0 10px 8px; }
+    .req-check-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; font-size: 0.86rem; }
+    .req-check-field { border-bottom: 1px solid #555; display: inline-block; min-width: 80px; margin-left: 4px; }
+    .req-note { font-size: 0.82rem; margin: 14px 0; line-height: 1.6; }
+    .req-sigs { margin-top: 20px; }
+    .req-sig-row { margin-bottom: 20px; }
+    .req-sig-line { border-bottom: 1px solid #333; width: 320px; display: block; margin-top: 6px; height: 1px; }
+    .req-aifa-ref { font-size: 0.75rem; color: #555; text-align: right; margin-bottom: 6px; }
+    /* Pannello impostazioni modulo */
+    .richiesta-cfg {
+      background: #f0f4fa; border-bottom: 1px solid #dde5ef;
+      padding: 0; overflow: hidden;
+      transition: max-height 0.25s ease;
+      max-height: 0;
+    }
+    .richiesta-cfg.open { max-height: 420px; }
+    .richiesta-cfg-inner { padding: 16px 20px; }
+    .richiesta-cfg-inner .cfg-title {
+      font-weight: 700; font-size: 0.82rem; color: #1a3a5c;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+    }
+    .richiesta-cfg-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px;
+    }
+    .richiesta-cfg-grid label { font-size: 0.76rem; color: #555; display: block; margin-bottom: 2px; }
+    .richiesta-cfg-grid input {
+      width: 100%; font-size: 0.8rem; padding: 5px 8px;
+      border: 1.5px solid #cdd8e8; border-radius: 6px; background: white;
+    }
+    .richiesta-cfg-grid .full { grid-column: 1 / -1; }
+    .richiesta-cfg-save {
+      margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .aifa-notice {
+      font-size: 0.74rem; color: #666; background: #fffbe6;
+      border: 1px solid #e0d080; border-radius: 6px; padding: 7px 10px;
+      margin-top: 10px; line-height: 1.5;
+    }
+    /* Stampa: mostra solo il modulo */
+    @media print {
+      body > *:not(#richiesta-print-area) { display: none !important; }
+      #richiesta-print-area { display: block !important; padding: 20mm 18mm; }
+      .richiesta-overlay, .richiesta-header, .richiesta-footer { display: none !important; }
+    }
+    #richiesta-print-area { display: none; }
+
+    /* Legenda */
+    .legend {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 0.76rem;
+      color: #667;
+      margin-top: 14px;
+    }
+    .legend span { display: flex; align-items: center; gap: 5px; }
+
+    /* ---- Striscia sync ---- */
+    .sync-strip {
+      background: white;
+      border-radius: 12px;
+      padding: 10px 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.83rem;
+    }
+    .sync-left  { display: flex; align-items: center; gap: 8px; }
+    .sync-dot   { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .sync-dot.ok   { background: #2e9e5b; box-shadow: 0 0 0 2px #d4f4e3; }
+    .sync-dot.warn { background: #e07b00; box-shadow: 0 0 0 2px #fff0d4; }
+    .sync-dot.off  { background: #c0ccd8; box-shadow: 0 0 0 2px #edf2f7; }
+    .sync-label { font-weight: 600; color: #1a2a3a; }
+    .sync-sub   { color: #9aabb0; font-size: 0.75rem; }
+    .sync-unsupported { color: #e07b00; font-size: 0.78rem; }
+
+    /* ---- Riquadro messaggio medico ---- */
+    .msg-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px 22px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.09);
+      margin-bottom: 24px;
+    }
+    .msg-card h2 { font-size: 1rem; color: #1a6fa8; font-weight: 700; margin-bottom: 14px; }
+
+    .msg-config {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .msg-config .field { flex: 1; min-width: 160px; }
+
+    .msg-box {
+      background: #f7fafe;
+      border: 1.5px solid #d0d8e4;
+      border-radius: 10px;
+      padding: 16px 18px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: #1a2a3a;
+      white-space: pre-wrap;
+      cursor: text;
+      user-select: text;
+      min-height: 80px;
+    }
+    .msg-box:focus { outline: 2px solid #1a6fa8; }
+    .msg-empty {
+      color: #aab;
+      font-style: italic;
+      font-size: 0.85rem;
+      padding: 18px;
+      text-align: center;
+    }
+    .msg-actions { display: flex; gap: 10px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
+    .copy-ok { font-size: 0.82rem; color: #2e9e5b; font-weight: 600; display: none; }
+
+    /* ---- Pannello esporta PDF ---- */
+    /* ---- Cloud Sync card ---- */
+    .cloud-card {
+      background: white;
+      border-radius: 14px;
+      padding: 18px 22px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.09);
+      margin-bottom: 24px;
+      border-left: 4px solid #7c3aed;
+    }
+    .cloud-card h2 { font-size: 1rem; color: #5b21b6; font-weight: 700; margin-bottom: 10px; }
+    .cloud-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.8rem; font-weight: 600; padding: 4px 10px;
+      border-radius: 20px; margin-bottom: 12px;
+    }
+    .cloud-status.off  { background: #f1f5f9; color: #64748b; }
+    .cloud-status.ok   { background: #d1fae5; color: #065f46; }
+    .cloud-status.err  { background: #fee2e2; color: #991b1b; }
+    .cloud-status.sync { background: #ede9fe; color: #5b21b6; }
+    .cloud-fields {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px; margin-bottom: 14px;
+    }
+    .cloud-fields label { font-size: 0.72rem; color: #667; display: block; margin-bottom: 3px; }
+    .cloud-fields input {
+      width: 100%; border: 1.5px solid #d0d8e4; border-radius: 8px;
+      padding: 8px 10px; font-size: 0.84rem; background: #fafcff;
+    }
+    .cloud-fields input:focus { outline: none; border-color: #7c3aed; }
+    .cloud-note { font-size: 0.75rem; color: #8a9ab0; line-height: 1.5; margin-top: 10px; }
+    .cloud-note a { color: #7c3aed; }
+    /* ---- PDF card ---- */
+    .pdf-card {
+      background: white;
+      border-radius: 14px;
+      padding: 18px 22px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.09);
+      margin-bottom: 24px;
+      border-left: 4px solid #2e9e5b;
+    }
+    .pdf-card h2 { font-size: 1rem; color: #2e7a50; font-weight: 700; margin-bottom: 12px; }
+    .pdf-config {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .pdf-config .field { flex: 1; min-width: 180px; }
+    .pdf-note {
+      font-size: 0.78rem;
+      color: #7a9ab0;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+
+    /* ---- Intestazione visibile solo in stampa ---- */
+    .print-header {
+      display: none;
+    }
+
+    /* ---- Media print ---- */
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      .no-print { display: none !important; }
+
+      body { background: white; font-size: 10pt; color: #000; }
+      header { display: none; }
+
+      .container { padding: 0; max-width: 100%; }
+      .summary, .alert-banner, .msg-card, .form-card,
+      .pdf-card, .table-header .search-box,
+      .table-header button, footer { display: none !important; }
+
+      .table-card { box-shadow: none; border: none; border-radius: 0; }
+      .table-header { border-bottom: 1.5pt solid #5a2d82; padding: 0 0 6pt 0; }
+      .table-header h2 { font-size: 11pt; font-weight: bold; color: #2d3748; }
+
+      table { min-width: unset; width: 100%; font-size: 9pt; border-collapse: collapse; }
+      thead th {
+        background: #f2eff8 !important;
+        color: #2d3748 !important;
+        font-size: 7.5pt;
+        padding: 4pt 6pt;
+        border: 1pt solid #ccc;
+        white-space: normal !important;
+        word-break: break-word;
+        hyphens: auto;
+      }
+      td { padding: 4pt 6pt; border: 0.5pt solid #e0e0e0; vertical-align: top; }
+      tbody tr:nth-child(even) td { background: #faf8ff !important; }
+
+      .pill { border: 1pt solid #999; padding: 1pt 5pt; border-radius: 3pt; font-size: 7.5pt; }
+      .pill.ok   { background: #d4f4e3 !important; }
+      .pill.warn { background: #fff0d4 !important; }
+      .pill.crit { background: #fde0e0 !important; }
+
+      .badge-dpc   { background: #e8e0ff !important; color: #3a1f9a !important;
+                     font-size: 7pt; padding: 2pt 5pt; border: 0.5pt solid #9070d0;
+                     border-radius: 3pt; font-weight: 700; }
+      .badge-pt    { background: #d4f0ff !important; color: #004a80 !important;
+                     font-size: 7pt; padding: 2pt 5pt; border: 0.5pt solid #70b8e0;
+                     border-radius: 3pt; font-weight: 700; }
+      .badge-nosub { background: #ffecd4 !important; color: #7a3a00 !important;
+                     font-size: 7pt; padding: 2pt 5pt; border: 0.5pt solid #c08040;
+                     border-radius: 3pt; font-weight: 700; }
+
+      .quick-row { display: none !important; }
+      .qty-sub { display: block; }
+      .note-cell { max-width: none; font-size: 8pt; color: #333; white-space: normal; word-break: break-word; }
+
+      .legend { padding: 6pt 0 0 0 !important; border-top: 0.5pt solid #ccc; margin-top: 4pt; }
+
+      .print-header {
+        display: block !important;
+        margin-bottom: 14pt;
+        padding-bottom: 10pt;
+        border-bottom: 2pt solid #5a2d82;
+      }
+      .print-header .ph-title {
+        font-size: 16pt;
+        font-weight: 700;
+        color: #5a2d82;
+        margin-bottom: 4pt;
+      }
+      .print-header .ph-sub {
+        font-size: 9pt;
+        color: #556;
+        margin-bottom: 6pt;
+      }
+      .print-header .ph-grid {
+        display: flex;
+        gap: 30pt;
+        font-size: 9pt;
+      }
+      .print-header .ph-field { display: flex; flex-direction: column; gap: 2pt; }
+      .print-header .ph-lbl  { font-size: 7.5pt; text-transform: uppercase; color: #8a9ab0; letter-spacing: 0.3pt; }
+      .print-header .ph-val  { font-weight: 600; font-size: 10pt; border-bottom: 0.5pt solid #c8b0e0; min-width: 100pt; padding-bottom: 1pt; color: #2d3748; }
+
+      .print-footer {
+        display: flex !important;
+        margin-top: 12pt;
+        padding-top: 6pt;
+        border-top: 0.5pt solid #c8b0e0;
+        font-size: 7.5pt;
+        color: #8a9ab0;
+        justify-content: space-between;
+      }
+
+      /* Evita che tbl-wrap tagli le colonne in stampa */
+      .tbl-wrap { overflow: visible !important; }
+
+      /* Versione personale: larghezze colonne per far entrare tutto in A4 verticale */
+      body.pdf-personal table { table-layout: fixed; }
+      body.pdf-personal table th:nth-child(1),
+      body.pdf-personal table td:nth-child(1) { width: 18%; }   /* Farmaco */
+      body.pdf-personal table th:nth-child(2),
+      body.pdf-personal table td:nth-child(2) { width:  7%; }   /* CPR/conf */
+      body.pdf-personal table th:nth-child(3),
+      body.pdf-personal table td:nth-child(3) { width: 12%; }   /* Unità disp. */
+      body.pdf-personal table th:nth-child(4),
+      body.pdf-personal table td:nth-child(4) { width:  9%; }   /* Posologia */
+      body.pdf-personal table th:nth-child(5),
+      body.pdf-personal table td:nth-child(5) { width:  9%; }   /* Giorni auto. */
+      body.pdf-personal table th:nth-child(6),
+      body.pdf-personal table td:nth-child(6) { width: 12%; }   /* Stato */
+      body.pdf-personal table th:nth-child(7),
+      body.pdf-personal table td:nth-child(7) { width: 33%; word-break: break-word; } /* Note */
+
+      /* Versione FSE: mostra solo Farmaco(1) · CPR/conf(2) · Posologia(4) · Note(7)
+         Nasconde: Unità disponibili(3) · Giorni autonomia(5) · Stato(6)            */
+      body.pdf-fse table th:nth-child(3),
+      body.pdf-fse table td:nth-child(3),
+      body.pdf-fse table th:nth-child(5),
+      body.pdf-fse table td:nth-child(5),
+      body.pdf-fse table th:nth-child(6),
+      body.pdf-fse table td:nth-child(6) { display: none !important; }
+
+      /* Versione FSE: intestazione specifica */
+      body.pdf-fse .print-header .ph-subtitle-fse { display: block !important; }
+      body.pdf-fse .print-header .ph-subtitle-full { display: none !important; }
+      body.pdf-personal .print-header .ph-subtitle-fse { display: none !important; }
+      body.pdf-personal .print-header .ph-subtitle-full { display: block !important; }
+
+      @page {
+        size: A4 portrait;
+        margin: 18mm 15mm 18mm 15mm;
+      }
+    }
+    .print-footer { display: none; }
+  </style>
+<style id="print-col-style"></style>
+</head>
+<body>
+
+<header>
+  <div class="icon">💊</div>
+  <div>
+    <h1>Gestione Terapia Farmacologica</h1>
+    <p>Monitoraggio scorte · Autonomia giornaliera · Allarme ricette</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Intestazione visibile solo su stampa/PDF -->
+  <div class="print-header" id="print-header">
+    <div class="ph-title">Terapia Farmacologica in Corso</div>
+    <div class="ph-sub ph-subtitle-full">Documento personale — Terapia completa con scorte e autonomia</div>
+    <div class="ph-sub ph-subtitle-fse">Documento per il Fascicolo Sanitario Elettronico — Taccuino personale</div>
+    <div class="ph-grid">
+      <div class="ph-field">
+        <span class="ph-lbl">Paziente</span>
+        <span class="ph-val" id="ph-paziente">—</span>
+      </div>
+      <div class="ph-field">
+        <span class="ph-lbl">Data nascita</span>
+        <span class="ph-val" id="ph-nascita">—</span>
+      </div>
+      <div class="ph-field">
+        <span class="ph-lbl">Codice fiscale</span>
+        <span class="ph-val" id="ph-cf">—</span>
+      </div>
+      <div class="ph-field">
+        <span class="ph-lbl">Data documento</span>
+        <span class="ph-val" id="ph-data">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Piè di pagina visibile solo su stampa/PDF -->
+  <div class="print-footer" id="print-footer">
+    <span>Documento generato automaticamente — uso personale</span>
+    <span id="pf-data">—</span>
+  </div>
+
+  <!-- Sommario -->
+  <div class="summary">
+    <div class="card total"><div class="num" id="cnt-total">0</div><div class="lbl">Farmaci totali</div></div>
+    <div class="card ok">  <div class="num" id="cnt-ok">0</div>  <div class="lbl">Scorta adeguata</div></div>
+    <div class="card warn"><div class="num" id="cnt-warn">0</div> <div class="lbl">Ricetta</div></div>
+    <div class="card crit"><div class="num" id="cnt-crit">0</div> <div class="lbl">Scorta critica</div></div>
+  </div>
+
+  <!-- Striscia sincronizzazione -->
+  <div class="sync-strip no-print" id="sync-strip">
+    <div class="sync-left">
+      <span class="sync-dot off" id="sync-dot"></span>
+      <div>
+        <div class="sync-label" id="sync-label">Solo locale</div>
+        <div class="sync-sub"  id="sync-sub">Collega una cartella per sincronizzare via iCloud</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" id="sync-actions">
+      <button class="btn btn-secondary btn-sm" id="btn-connect" onclick="connectFolder()">
+        ☁️ Collega cartella iCloud
+      </button>
+      <button class="btn btn-secondary btn-sm no-print" onclick="exportData()"
+        title="Scarica i dati come file JSON (per trasferirli su un altro browser)">
+        ⬇️ Esporta dati
+      </button>
+      <label class="btn btn-secondary btn-sm no-print" style="cursor:pointer;margin:0;"
+        title="Carica un file JSON esportato in precedenza">
+        ⬆️ Importa dati
+        <input type="file" accept=".json" style="display:none;" onchange="importData(event)"/>
+      </label>
+    </div>
+  </div>
+
+  <!-- Banner allarmi -->
+  <div class="alert-banner" id="alert-banner">
+    <div class="banner-title">⚠️ Attenzione — Ricetta per:</div>
+    <div id="alert-list"></div>
+  </div>
+
+  <!-- Pannello esporta PDF -->
+  <div class="pdf-card no-print">
+    <h2>📄 Esporta PDF</h2>
+    <div class="pdf-config">
+      <div class="field">
+        <label>Nome e cognome paziente</label>
+        <input type="text" id="pdf-paziente" placeholder="es. Lamberto Previati"
+               oninput="updatePrintHeader()" />
+      </div>
+      <div class="field">
+        <label>Data di nascita</label>
+        <input type="date" id="pdf-nascita" oninput="updatePrintHeader()" />
+      </div>
+      <div class="field">
+        <label>Codice fiscale</label>
+        <input type="text" id="pdf-cf" placeholder="es. PRVLBR…" maxlength="16"
+               style="text-transform:uppercase" oninput="updatePrintHeader()" />
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+
+      <!-- Bottone versione personale -->
+      <div style="flex:1;min-width:220px;background:#f5f8fc;border-radius:10px;padding:14px 16px;border:1.5px solid #d0d8e4;">
+        <div style="font-weight:700;font-size:0.88rem;margin-bottom:4px;">🗒️ Versione personale</div>
+        <div style="font-size:0.76rem;color:#667;margin-bottom:10px;line-height:1.4;">
+          Tutte le colonne: quantità, giorni autonomia, stato scorte, note e orari.
+        </div>
+        <button class="btn btn-secondary" onclick="exportPDF('personal')"
+          style="width:100%;font-size:0.82rem;">📥 Genera PDF completo</button>
+      </div>
+
+      <!-- Bottone versione FSE -->
+      <div style="flex:1;min-width:220px;background:#f0fbf5;border-radius:10px;padding:14px 16px;border:1.5px solid #a8dfc0;">
+        <div style="font-weight:700;font-size:0.88rem;color:#2e7a50;margin-bottom:4px;">🏥 Versione FSE / medico</div>
+        <div style="font-size:0.76rem;color:#667;margin-bottom:10px;line-height:1.4;">
+          Solo: <strong>Farmaco · CPR/conf · Posologia · Note/Orari</strong>.<br>
+          Adatta per il Taccuino del FSE o da inviare al medico.
+        </div>
+        <button class="btn btn-primary" onclick="exportPDF('fse')"
+          style="width:100%;font-size:0.82rem;background:#2e9e5b;">📥 Genera PDF per FSE</button>
+      </div>
+
+    </div>
+
+      <!-- Bottone versione TXT -->
+      <div style="flex:1;min-width:220px;background:#fffbf0;border-radius:10px;padding:14px 16px;border:1.5px solid #f0d080;">
+        <div style="font-weight:700;font-size:0.88rem;color:#7a5800;margin-bottom:4px;">📄 Testo semplice (TXT)</div>
+        <div style="font-size:0.76rem;color:#667;margin-bottom:10px;line-height:1.4;">
+          File .txt leggibile ovunque: farmaci, scorte, giorni autonomia, note e orari.
+        </div>
+        <button class="btn btn-secondary" onclick="exportTXT()"
+          style="width:100%;font-size:0.82rem;background:#f5e070;color:#5a4000;border-color:#d4b800;">
+          📄 Scarica TXT
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Selezione colonne personalizzata -->
+    <div style="background:#f5f0ff;border-radius:10px;padding:14px 16px;border:1.5px solid #c4b0e8;margin-bottom:10px;">
+      <div style="font-weight:700;font-size:0.88rem;color:#5a21b6;margin-bottom:8px;">🗂️ Colonne da stampare</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px 18px;" id="col-checkboxes">
+        <label style="font-size:0.82rem;display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="col-1" checked/> Farmaco</label>
+        <label style="font-size:0.82rem;display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="col-2" checked/> CPR / conf.</label>
+        <label style="font-size:0.82rem;display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="col-3" checked/> Unità disponibili</label>
+        <label style="font-size:0.82rem;display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="col-4" checked/> Posologia</label>
+        <label style="font-size:0.82rem;display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="col-5" checked/> Giorni autonomia</label>
+        <label style="font-size:0.82rem;display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="col-6" checked/> Stato</label>
+        <label style="font-size:0.82rem;display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="col-7" checked/> Note / Orari</label>
+      </div>
+      <div style="font-size:0.72rem;color:#7a5ab0;margin-top:6px;">
+        La selezione si applica a entrambe le versioni PDF. "Farmaco" è sempre incluso.
+      </div>
+    </div>
+
+    <div class="pdf-note">
+      Si aprirà la finestra di stampa — seleziona <strong>"Salva come PDF"</strong> come destinazione.<br>
+      Per il FSE: accedi al tuo portale regionale → <strong>Taccuino personale</strong> → carica il file salvato.
+    </div>
+  </div>
+
+  <!-- Readonly banner -->
+  <div class="readonly-banner no-print" style="display:none;background:#e8f4fd;border:1.5px solid #74b9d8;border-radius:10px;padding:9px 16px;margin-bottom:16px;font-size:.83rem;color:#1a4a6a;font-weight:600;text-align:center;" id="readonly-banner">
+    👁️ Modalità <strong>sola lettura</strong> — i dati si aggiornano in tempo reale ma non è possibile apportare modifiche.
+  </div>
+
+  <!-- Cloud Sync Setup -->
+  <div class="cloud-card no-print" id="cloud-card">
+    <h2>☁️ Sincronizzazione Cloud (tutti i dispositivi)</h2>
+    <div id="cloud-status-badge" class="cloud-status off">⚫ Non configurato</div>
+
+    <div id="cloud-setup-body">
+      <p style="font-size:0.82rem;color:#445;margin-bottom:14px;line-height:1.5;">
+        Inserisci il tuo <strong>Codice personale</strong> per sincronizzare i dati
+        su tutti i dispositivi. Sceglilo liberamente (es. <em>AlePrev1992</em>) —
+        usalo uguale su ogni dispositivo.
+      </p>
+      <div style="max-width:320px;margin-bottom:14px;">
+        <label style="font-size:0.72rem;color:#5b21b6;font-weight:700;display:block;margin-bottom:4px;">
+          🔑 Codice personale
+        </label>
+        <input type="text" id="fb-code" placeholder="Es. AlePrev1992"
+          style="width:100%;border:2px solid #7c3aed;border-radius:8px;padding:9px 12px;
+                 font-size:1rem;font-weight:700;letter-spacing:1px;"/>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary" onclick="saveCloudConfig()"
+          style="background:#7c3aed;border-color:#7c3aed;">🔗 Connetti al Cloud</button>
+        <button class="btn btn-secondary btn-sm" onclick="genConfigLink()" id="btn-genlink"
+          style="display:none;background:#ede9fe;color:#5b21b6;border-color:#c4b5fd;">
+          🔗 Link modifica
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="genReadonlyLink()" id="btn-genlink-ro"
+          style="display:none;background:#e8f4fd;color:#1a4a6a;border-color:#74b9d8;">
+          👁️ Link sola lettura
+        </button>
+        <button class="btn btn-secondary btn-sm edit-only" onclick="disconnectCloud()" id="btn-disconnect"
+          style="display:none;">✖ Disconnetti</button>
+      </div>
+      <!-- Box link generato -->
+      <div id="cfg-link-box" style="display:none;margin-top:12px;background:#f5f3ff;border:1.5px solid #c4b5fd;
+           border-radius:8px;padding:10px 14px;">
+        <div style="font-size:0.75rem;color:#5b21b6;font-weight:700;margin-bottom:6px;">
+          📲 Apri questo link sull'altro dispositivo (si configura da solo):
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="cfg-link-input" type="text" readonly
+            style="flex:1;font-size:0.72rem;border:1px solid #c4b5fd;border-radius:6px;
+                   padding:6px 8px;background:white;color:#333;"/>
+          <button class="btn btn-primary btn-sm" onclick="copyCfgLink()"
+            style="background:#7c3aed;border-color:#7c3aed;white-space:nowrap;">📋 Copia</button>
+        </div>
+        <div style="font-size:0.72rem;color:#888;margin-top:6px;" id="cfg-link-note">
+          ⚠️ Il link contiene le sue credenziali Firebase — non lo condivida con altri.
+        </div>
+      </div>
+      <div class="cloud-note">
+        Il codice personale è la sua "password" d'accesso ai dati cloud —
+        lo stesso su ogni dispositivo. Non lo perda.
+      </div>
+    </div>
+  </div>
+
+  <!-- Riquadro messaggio per il medico -->
+  <div class="msg-card no-print" id="msg-section">
+    <h2>✉️ Messaggio per il medico curante</h2>
+    <div class="msg-config">
+      <div class="field">
+        <label>Titolo / Nome del medico</label>
+        <input type="text" id="msg-doctor" placeholder="es. Dr. Rossi"
+               oninput="buildMessage()" />
+      </div>
+      <div class="field">
+        <label>Il tuo nome (mittente)</label>
+        <input type="text" id="msg-sender" placeholder="es. Mario Previati"
+               oninput="buildMessage()" />
+      </div>
+      <div class="field" style="max-width:200px;">
+        <label>Includi farmaci</label>
+        <select id="msg-filter" onchange="buildMessage()"
+          style="width:100%;border:1.5px solid #d0d8e4;border-radius:8px;padding:9px 10px;font-size:0.87rem;background:#fafcff;">
+          <option value="alarm">Tutti in allarme</option>
+          <option value="crit">Solo critici (≤3 gg)</option>
+          <option value="all">Tutti i farmaci</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="msg-box" class="msg-box" contenteditable="true" spellcheck="true"></div>
+
+    <div class="msg-actions">
+      <button class="btn btn-primary" onclick="copyMessage()">📋 Copia negli appunti</button>
+      <button class="btn btn-secondary" onclick="buildMessage()">🔄 Rigenera</button>
+      <span class="copy-ok" id="copy-ok">✔ Copiato!</span>
+    </div>
+  </div>
+
+  <!-- Form aggiungi (collassabile) -->
+  <div class="form-card no-print edit-only">
+    <div class="form-toggle" onclick="toggleForm()">
+      <h2>➕ Aggiungi farmaco</h2>
+      <span class="chevron" id="chevron">▼</span>
+    </div>
+    <div class="form-body" id="form-body" style="display:none;">
+      <div class="form-grid">
+        <div class="field">
+          <label>Nome farmaco</label>
+          <input type="text" id="f-name" placeholder="es. Ramipril 5 mg" />
+        </div>
+        <div class="field">
+          <label>Unità/confezione</label>
+          <input type="number" id="f-pkg" min="0" step="1" placeholder="es. 30" />
+          <div class="hint">CPR (o unità) per scatola</div>
+        </div>
+        <div class="field">
+          <label>Quantità disponibile</label>
+          <input type="number" id="f-qty" min="0" step="1" placeholder="es. 45" />
+          <div class="hint">unità totali in casa oggi</div>
+        </div>
+        <div class="field">
+          <label>Posologia (unità/die)</label>
+          <input type="number" id="f-dose" min="0.01" step="0.25" placeholder="es. 1" />
+        </div>
+        <div class="field">
+          <label>Note / orari</label>
+          <input type="text" id="f-note" placeholder="es. 08:00 · 20:00, a digiuno" />
+        </div>
+        <div class="field">
+          <label>Tipo ricetta</label>
+          <div style="display:flex;flex-direction:column;gap:4px;padding-top:4px;">
+            <label style="font-size:0.82rem;color:#445;display:flex;align-items:center;gap:5px;">
+              <input type="checkbox" id="f-dpc" /> DPC
+            </label>
+            <label style="font-size:0.82rem;color:#445;display:flex;align-items:center;gap:5px;">
+              <input type="checkbox" id="f-nosub" /> Non sost.
+            </label>
+            <label style="font-size:0.82rem;color:#004a80;display:flex;align-items:center;gap:5px;">
+              <input type="checkbox" id="f-pt" onchange="document.getElementById('f-pt-expiry-row').style.display=this.checked?'flex':'none'"/> PT
+            </label>
+            <div id="f-pt-expiry-row" style="display:none;align-items:center;gap:5px;margin-top:2px;">
+              <span style="font-size:0.78rem;color:#004a80;">Scade:</span>
+              <input type="date" id="f-pt-expiry"
+                style="border:1.5px solid #70b8e0;border-radius:5px;padding:3px 6px;font-size:0.78rem;color:#004a80;"/>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="addDrug()">Aggiungi</button>
+        <button class="btn btn-secondary" onclick="clearForm()">Cancella</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabella principale -->
+  <div class="table-card">
+    <div class="table-header">
+      <h2>📋 Terapia in corso &nbsp;<span style="font-weight:400;font-size:0.8rem;color:#8a9ab0;" id="last-update-inline"></span></h2>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <input class="search-box no-print" type="text" id="search-box"
+               placeholder="🔍 Cerca farmaco…" oninput="render()" />
+        <span style="font-size:0.77rem;color:#8a9ab0;display:flex;align-items:center;gap:6px;">
+          Allarme:
+          <input id="alarm-input" type="number" min="1" max="90" step="1"
+            style="width:52px;border:1.5px solid #d0d8e4;border-radius:6px;padding:4px 7px;
+                   font-size:0.83rem;background:#fafcff;text-align:center;font-weight:700;color:#e07b00;"
+            onchange="setAlarm(this.value)"
+            onkeydown="if(event.key==='Enter')setAlarm(this.value)"
+            title="Giorni di preavviso per l'allarme ricetta" />
+          <strong id="alarm-label" style="color:#e07b00;">gg</strong>
+        </span>
+        <button class="btn btn-secondary btn-sm no-print" onclick="window.print()">🖨️ Stampa</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-sort="name"   onclick="setSort('name')"   title="Ordina per nome">Farmaco</th>
+            <th class="sortable" data-sort="pkg"    onclick="setSort('pkg')"    title="Ordina per CPR/conf.">CPR / conf.</th>
+            <th class="sortable" data-sort="qty"    onclick="setSort('qty')"    title="Ordina per quantità disponibile">Unità disponibili</th>
+            <th class="sortable" data-sort="dose"   onclick="setSort('dose')"   title="Ordina per posologia">Posologia (unità/die)</th>
+            <th class="sortable" data-sort="days"   onclick="setSort('days')"   title="Ordina per giorni autonomia">Giorni autonomia</th>
+            <th class="sortable" data-sort="status" onclick="setSort('status')" title="Ordina per stato">Stato</th>
+            <th>Note / Orari</th>
+            <th class="no-print">Azioni</th>
+          </tr>
+        </thead>
+        <tbody id="drug-table">
+          <tr id="empty-row">
+            <td colspan="8">
+              <div class="empty-state">
+                <div class="big-icon">💊</div>
+                <p>Nessun farmaco. Usa il modulo qui sopra per aggiungerne.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="legend no-print" style="padding:10px 18px 14px;">
+      <span><span class="badge-dpc">DPC</span> Ricetta DPC (non SSN)</span>
+      <span><span class="badge-nosub">Non sost.</span> Non sostituibile</span>
+      <span><span class="badge-pt">PT</span> Piano Terapeutico</span>
+    </div>
+  </div>
+
+  <footer>
+    <span>Aggiornato: <span id="last-update">—</span></span>
+  </footer>
+</div>
+
+<!-- Modale TXT (mobile) -->
+<div class="txt-modal-overlay" id="txt-modal-overlay" onclick="if(event.target===this)closeTxtModal()">
+  <div class="txt-modal">
+    <div class="txt-modal-header">
+      <h3>📄 Terapia — Testo</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeTxtModal()">✖ Chiudi</button>
+    </div>
+    <div class="txt-modal-body">
+      <textarea id="txt-modal-content" readonly></textarea>
+    </div>
+    <div class="txt-modal-footer">
+      <button class="btn btn-secondary" onclick="copyTxtModal()">📋 Copia tutto</button>
+      <button class="btn btn-primary" onclick="shareTxtModal()">📤 Condividi</button>
+      <button class="btn btn-secondary" onclick="closeTxtModal()">✖ Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modulo Richiesta Hydrocortisone Roussel -->
+<div class="richiesta-overlay" id="richiesta-overlay" onclick="if(event.target===this)closeRichiesta()">
+  <div class="richiesta-modal">
+    <div class="richiesta-header">
+      <h3>📋 Modulo richiesta — Hydrocortisone Roussel®</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeRichiesta()">✖ Chiudi</button>
+    </div>
+    <div class="richiesta-body" id="richiesta-form-body">
+      <!-- compilato da JS -->
+    </div>
+    <!-- Pannello impostazioni (collassabile, sotto il form) -->
+    <div class="richiesta-cfg" id="richiesta-cfg">
+      <div class="richiesta-cfg-inner">
+        <div class="cfg-title">⚙️ Impostazioni modulo — aggiorna quando AIFA pubblica una nuova determina</div>
+        <div class="richiesta-cfg-grid">
+          <div class="full">
+            <label>Numero determina AIFA</label>
+            <input type="text" id="cfg-determina" placeholder="es. 556/2026" />
+          </div>
+          <div class="full">
+            <label>Nome destinatario (Spett.le)</label>
+            <input type="text" id="cfg-dest-nome" placeholder="es. Pharmaidea S.r.l." />
+          </div>
+          <div>
+            <label>Indirizzo</label>
+            <input type="text" id="cfg-dest-via" placeholder="es. Via del Commercio, 5" />
+          </div>
+          <div>
+            <label>CAP / Città</label>
+            <input type="text" id="cfg-dest-citta" placeholder="es. 25039 Travagliato (BS)" />
+          </div>
+          <div>
+            <label>N. verde</label>
+            <input type="text" id="cfg-dest-tel" placeholder="es. 800 373 555 – Tasto 3" />
+          </div>
+          <div>
+            <label>E-mail</label>
+            <input type="text" id="cfg-dest-email" placeholder="es. Ospedaliero@pharmaidea.com" />
+          </div>
+        </div>
+        <div class="richiesta-cfg-save">
+          <button class="btn btn-primary btn-sm" onclick="saveRichiestaCfg()">💾 Salva impostazioni</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetRichiestaCfg()">↺ Ripristina predefiniti</button>
+        </div>
+        <div class="aifa-notice">
+          ⚠️ AIFA aggiorna periodicamente le determinazioni. Controlla la pagina ufficiale e aggiorna il numero determina e i dati del destinatario se cambiati.
+        </div>
+      </div>
+    </div>
+    <div class="richiesta-footer">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;width:100%;">
+        <button class="btn btn-secondary" onclick="toggleRichiestaCfg()" title="Impostazioni modulo"
+                style="background:#eaf0fb;color:#1a3a5c;border-color:#b0c4de;">⚙️ Impostazioni</button>
+        <button class="btn btn-secondary" onclick="apriAIFA()"
+                style="font-size:0.82rem;">🔗 AIFA</button>
+        <button class="btn btn-primary" onclick="stampaRichiesta()">🖨️ Stampa / Salva PDF</button>
+        <button class="btn btn-secondary" onclick="closeRichiesta()">✖ Chiudi</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Area invisibile usata solo per la stampa -->
+<div id="richiesta-print-area"></div>
+
+<!-- Guida iOS: istruzioni per Share → Stampa → PDF (non viene stampata) -->
+<div id="ios-print-guide" style="display:none; position:fixed; inset:0; z-index:99999;
+     background:rgba(10,30,60,0.82); align-items:center; justify-content:center; padding:20px;">
+  <div style="background:white; border-radius:16px; padding:24px 22px; max-width:340px;
+              width:100%; box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+    <div style="font-size:1.1rem; font-weight:700; color:#1a3a5c; margin-bottom:6px;">
+      📄 Salva modulo come PDF
+    </div>
+    <div style="font-size:0.82rem; color:#444; margin-bottom:16px; line-height:1.5;">
+      Il modulo è pronto. Segui questi passaggi in Safari:
+    </div>
+    <div style="font-size:0.84rem; line-height:1.9; color:#222; margin-bottom:20px;">
+      <div style="display:flex;gap:10px;margin-bottom:6px;">
+        <span style="background:#1a3a5c;color:white;border-radius:50%;width:22px;height:22px;
+                     display:flex;align-items:center;justify-content:center;
+                     font-size:11px;flex-shrink:0;margin-top:2px;">1</span>
+        <span>Tocca <strong>Condividi ⬆</strong> (barra in fondo a Safari)</span>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;">
+        <span style="background:#1a3a5c;color:white;border-radius:50%;width:22px;height:22px;
+                     display:flex;align-items:center;justify-content:center;
+                     font-size:11px;flex-shrink:0;margin-top:2px;">2</span>
+        <span>Seleziona <strong>"Stampa"</strong></span>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;">
+        <span style="background:#1a3a5c;color:white;border-radius:50%;width:22px;height:22px;
+                     display:flex;align-items:center;justify-content:center;
+                     font-size:11px;flex-shrink:0;margin-top:2px;">3</span>
+        <span>Nell'anteprima <strong>avvicina due dita</strong> (pinch open) per creare il PDF</span>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <span style="background:#1a3a5c;color:white;border-radius:50%;width:22px;height:22px;
+                     display:flex;align-items:center;justify-content:center;
+                     font-size:11px;flex-shrink:0;margin-top:2px;">4</span>
+        <span>Tocca <strong>Condividi ⬆ → Salva su File</strong> o invia per mail</span>
+      </div>
+    </div>
+    <button onclick="chiudiGuidaIOS()"
+            style="width:100%;padding:11px;background:#1a3a5c;color:white;border:none;
+                   border-radius:8px;font-size:0.9rem;font-weight:700;cursor:pointer;">
+      ✓ Ho salvato il PDF — chiudi
+    </button>
+  </div>
+</div>
+
+<script>
+/* ================================================
+   CONFIGURAZIONE
+   ================================================ */
+let   alarmDays   = 10;          // impostabile dall'utente
+const STORAGE_KEY = 'farmaci_terapia_v5';
+const ALARM_KEY   = 'farmaci_alarm_days';
+
+/* ================================================
+   TERAPIA (dati aggiornati al 16/03/2026)
+   qty  = unità disponibili oggi
+   pkg  = unità per confezione (riferimento)
+   dose = unità al giorno
+   dpc  = true → ricetta DPC
+   nosub = true → non sostituibile
+   ================================================ */
+const DEFAULT_DRUGS = [
+  { name: 'Tolvaptan 7,5 mg',               pkg: 0,  qty: 24,  dose: 0.5,  note: '13:00 (½ CPR)',                              dpc: false, nosub: false, pt: false, ptExpiry: null, refDate: '2026-03-19' },
+  { name: 'Hydrocortisone 10 mg',            pkg: 25, qty: 193, dose: 2.5,  note: '08:00 (1) · 20:00 (1) · 20:20 (½)',          dpc: false, nosub: false, pt: false, ptExpiry: null, refDate: '2026-03-19' },
+  { name: 'Keppra 1000 mg',                  pkg: 0,  qty: 78,  dose: 2,    note: '08:00 · 20:00',                               dpc: true,  nosub: true,  pt: true,  ptExpiry: null, refDate: '2026-03-19' },
+  { name: 'Lamictal 50 mg (Lamotrigina)',     pkg: 56, qty: 96,  dose: 2,    note: '08:00 · 20:00',                               dpc: true,  nosub: true,  pt: true,  ptExpiry: null, refDate: '2026-03-19' },
+  { name: 'Furosemide 25 mg',                pkg: 30, qty: 39,  dose: 3,    note: '08:00 (2 CPR) · 16:00 (1 CPR)',               dpc: false, nosub: false, pt: false, ptExpiry: null, refDate: '2026-03-19' },
+  { name: 'Luvion 50 mg',                    pkg: 40, qty: 56,  dose: 2,    note: '16:00 (2 CPR)',                               dpc: false, nosub: false, pt: false, ptExpiry: null, refDate: '2026-03-19' },
+  { name: 'Domperidone 10 mg',               pkg: 30, qty: 4,   dose: 2,    note: '08:00 · 20:00  —  15\' prima dei pasti',      dpc: false, nosub: false, pt: false, ptExpiry: null, refDate: '2026-03-19' },
+  { name: 'Tamsulosin 0,4 mg',               pkg: 20, qty: 10,  dose: 1,    note: '16:00',                                       dpc: false, nosub: false, pt: false, ptExpiry: null, refDate: '2026-03-19' },
+  { name: 'Lansox Orodispersibile 30 mg',    pkg: 14, qty: 12,  dose: 1,    note: '08:00',                                       dpc: false, nosub: false, pt: false, ptExpiry: null, refDate: '2026-03-19' },
+  { name: 'Movicol (bustine)',               pkg: 20, qty: 10,  dose: 1,    note: '16:00 (1 bustina)',                           dpc: false, nosub: false, pt: false, ptExpiry: null, refDate: '2026-03-19' },
+  { name: 'Atorvastatina 10 mg',             pkg: 30, qty: 45,  dose: 1,    note: '20:00',                                       dpc: false, nosub: false, pt: false, ptExpiry: null, refDate: '2026-03-19' },
+  { name: 'Fulcrosupra 145 mg (Fenofibrato)', pkg: 0, qty: 45,  dose: 1,    note: '20:00',                                       dpc: false, nosub: false, pt: false, ptExpiry: null, refDate: '2026-03-19' },
+  { name: 'DiBase 10000 UI (gocce)',          pkg: 0, qty: 0,   dose: 5.71, note: '10 gocce · MAR · GIO · SAB · DOM (≈5,7/die)', dpc: false, nosub: false, pt: false, ptExpiry: null, refDate: '2026-03-19' },
+];
+
+/* ================================================
+   STATO & PERSISTENZA
+   ================================================ */
+let drugs = [];
+let sortCol = null;   // colonna attiva: 'name','qty','dose','days','status','pkg' | null = ordine inserimento
+let sortDir = 1;      // 1 = ascendente, -1 = discendente
+
+function setSort(col) {
+  if (sortCol === col) {
+    if (sortDir === 1)  { sortDir = -1; }
+    else                { sortCol = null; sortDir = 1; } // terzo click: ripristina
+  } else {
+    sortCol = col;
+    sortDir = 1;
+  }
+  render();
+}
+
+function _sortVisible(arr) {
+  if (!sortCol) return arr;
+  return [...arr].sort((a, b) => {
+    let va, vb;
+    switch (sortCol) {
+      case 'name':
+        va = a.name.toLowerCase(); vb = b.name.toLowerCase();
+        return va < vb ? -sortDir : va > vb ? sortDir : 0;
+      case 'pkg':
+        return (a.pkg - b.pkg) * sortDir;
+      case 'qty':
+        return (a.qty - b.qty) * sortDir;
+      case 'dose':
+        return (a.dose - b.dose) * sortDir;
+      case 'days': {
+        const da = isFinite(getDays(a)) ? getDays(a) : Infinity;
+        const db = isFinite(getDays(b)) ? getDays(b) : Infinity;
+        return (da - db) * sortDir;
+      }
+      case 'status': {
+        const order = { crit: 0, warn: 1, ok: 2 };
+        va = order[statusOf(getDays(a))]; vb = order[statusOf(getDays(b))];
+        return (va - vb) * sortDir;
+      }
+      default: return 0;
+    }
+  });
+}
+
+function _updateSortHeaders() {
+  document.querySelectorAll('thead th.sortable').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (th.dataset.sort === sortCol) {
+      th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+    }
+  });
+}
+
+function _saveCore() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(drugs)); } catch(e) {}
+  updateTimestamp();
+}
+function save() { _saveCore(); }
+function saveAlarm() {
+  try { localStorage.setItem(ALARM_KEY, String(alarmDays)); } catch(e) {}
+}
+/* ================================================
+   SCALATURA AUTOMATICA
+   ================================================ */
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function daysBetween(a, b) {
+  return Math.floor((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000);
+}
+function applyAutoScale() {
+  const today = todayStr();
+  let changed = false;
+  drugs.forEach(d => {
+    if (!d.refDate) { d.refDate = today; changed = true; return; }
+    if (d.refDate === today) return;
+    const days = daysBetween(d.refDate, today);
+    if (days > 0 && d.dose > 0) {
+      d.qty = Math.max(0, Math.round((d.qty - days * d.dose) * 100) / 100);
+      changed = true;
+    }
+    d.refDate = today;
+    changed = true;
+  });
+  // Salva direttamente su localStorage per evitare il loop con l'override save()
+  if (changed) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(drugs)); } catch(e) {}
+  }
+}
+
+function load() {
+  // Carica soglia allarme
+  try {
+    const a = localStorage.getItem(ALARM_KEY);
+    if (a !== null) alarmDays = Math.max(1, parseInt(a, 10) || 10);
+  } catch(e) {}
+  // Carica farmaci
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { drugs = JSON.parse(raw); }
+    else { drugs = DEFAULT_DRUGS.map(d => ({ ...d })); save(); }
+  } catch(e) {
+    drugs = DEFAULT_DRUGS.map(d => ({ ...d })); save();
+  }
+  applyAutoScale();
+}
+function setAlarm(val) {
+  const v = Math.max(1, parseInt(val, 10) || 10);
+  alarmDays = v;
+  saveAlarm();
+  // Aggiorna etichetta nel titolo
+  const lbl = document.getElementById('alarm-label');
+  if (lbl) lbl.textContent = `≤ ${alarmDays} gg`;
+  render();
+}
+function updateTimestamp() {
+  const n = new Date();
+  const s = n.toLocaleDateString('it-IT') + ' ' +
+            n.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('last-update').textContent = s;
+  const il = document.getElementById('last-update-inline');
+  if (il) il.textContent = '— ' + s;
+}
+
+/* ================================================
+   CALCOLI
+   ================================================ */
+function getDays(d) {
+  if (!d.dose || d.dose <= 0) return Infinity;
+  return Math.floor(d.qty / d.dose);
+}
+function ptDaysLeft(d) {
+  if (!d.pt || !d.ptExpiry) return null;
+  return daysBetween(todayStr(), d.ptExpiry);
+}
+function ptStatus(d) {
+  const days = ptDaysLeft(d);
+  if (days === null) return null;
+  if (days < 0)  return 'expired';
+  if (days <= 3) return 'crit';
+  if (days <= 30) return 'warn';
+  return 'ok';
+}
+function fmtDate(iso) {
+  if (!iso) return '';
+  const [y, m, g] = iso.split('-');
+  return `${g}/${m}/${y}`;
+}
+function statusOf(days) {
+  if (!isFinite(days) || days > alarmDays) return 'ok';
+  if (days <= 3) return 'crit';
+  return 'warn';
+}
+const STATUS_LABEL = {
+  ok:   '🟢 OK',
+  warn: '🟡 Ricetta',
+  crit: '🔴 Scorta critica',
+};
+
+/* ================================================
+   FORM toggle
+   ================================================ */
+let formOpen = false;
+function toggleForm() {
+  formOpen = !formOpen;
+  document.getElementById('form-body').style.display = formOpen ? '' : 'none';
+  document.getElementById('chevron').style.transform = formOpen ? '' : 'rotate(-90deg)';
+}
+
+/* ================================================
+   RENDER
+   ================================================ */
+function render() {
+  const query  = (document.getElementById('search-box').value || '').toLowerCase();
+  const tbody  = document.getElementById('drug-table');
+  const empty  = document.getElementById('empty-row');
+
+  const visible = _sortVisible(
+    drugs.map((d, i) => ({ ...d, _idx: i }))
+         .filter(d => !query ||
+           d.name.toLowerCase().includes(query) ||
+           (d.note || '').toLowerCase().includes(query))
+  );
+
+  Array.from(tbody.querySelectorAll('tr[data-id]')).forEach(r => r.remove());
+
+  if (visible.length === 0) {
+    empty.style.display = '';
+    updateSummary();
+    return;
+  }
+  empty.style.display = 'none';
+
+  visible.forEach(d => {
+    const i    = d._idx;
+    const days = getDays(d);
+    const st   = statusOf(days);
+    const dDisp = isFinite(days) ? days : '∞';
+    const dCls  = 'days-' + st;
+
+    // Badge
+    const ptSt  = ptStatus(d);
+    const ptDays = ptDaysLeft(d);
+    const ptDateTxt = d.ptExpiry ? ` · ${fmtDate(d.ptExpiry)}` : '';
+    const ptBorderColor = ptSt === 'expired' ? '#c0392b' : ptSt === 'crit' ? '#e67e22' : ptSt === 'warn' ? '#d4ac0d' : '#70b8e0';
+    const ptBg          = ptSt === 'expired' ? '#fde0e0' : ptSt === 'crit' ? '#fef0e0' : ptSt === 'warn' ? '#fffde0' : '#d4f0ff';
+    const ptColor       = ptSt === 'expired' ? '#7a0000' : ptSt === 'crit' ? '#7a3000' : ptSt === 'warn' ? '#5a4a00' : '#004a80';
+    const ptBadgeStyle  = d.pt ? `background:${ptBg};color:${ptColor};border-color:${ptBorderColor};` : '';
+    const ptLabel       = d.pt ? `PT${ptDateTxt}` : '';
+    const badges = (d.dpc ? '<span class="badge-dpc no-print">DPC</span>' : '') +
+                   (d.nosub ? '<span class="badge-nosub no-print">Non sost.</span>' : '') +
+                   (d.pt  ? `<span class="badge-pt no-print" style="${ptBadgeStyle}">${ptLabel}</span>` : '');
+    const ptPrintTxt = d.pt ? ` [PT${d.ptExpiry ? ' scade '+fmtDate(d.ptExpiry) : ''}]` : '';
+    const badgesPrint = (d.dpc ? ' [DPC]' : '') + (d.nosub ? ' [Non sost.]' : '') + ptPrintTxt;
+
+    // CPR/conf
+    const pkgTxt = d.pkg > 0 ? d.pkg : '—';
+
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-id', i);
+    tr.innerHTML = `
+      <td><span class="drug-name">${esc(d.name)}</span>${badges}<span class="print-only" style="display:none">${badgesPrint}</span></td>
+      <td style="color:#8a9ab0;">${pkgTxt}</td>
+      <td>
+        <div class="qty-wrap">
+          <span class="qty-val">${d.qty} unità</span>
+          ${d.pkg > 0 ? `<span class="qty-sub">${(d.qty/d.pkg).toFixed(1)} conf.</span>` : ''}
+          <div class="quick-row no-print">
+            <span class="quick-lbl">Immetti:</span>
+            <input class="quick-input" type="number" min="0.01" step="1"
+              id="qi-${i}" placeholder="unità"
+              onkeydown="if(event.key==='Enter')addQty(${i},this.value,this)" />
+            <button class="btn btn-secondary btn-xs"
+              onclick="addQty(${i},document.getElementById('qi-${i}').value,document.getElementById('qi-${i}'))">✓</button>
+          </div>
+        </div>
+      </td>
+      <td>${d.dose} / die</td>
+      <td><span class="days-num ${dCls}">${dDisp}</span>${isFinite(days) ? ' gg' : ''}</td>
+      <td><span class="pill ${st}">${STATUS_LABEL[st]}</span></td>
+      <td class="note-cell">${esc(d.note || '')}</td>
+      <td class="no-print" style="white-space:nowrap;">
+        <button class="btn btn-secondary btn-sm edit-only" onclick="editRow(${i})">✏️</button>
+        <button class="btn btn-danger btn-sm edit-only" onclick="deleteRow(${i})" style="margin-left:4px">🗑️</button>
+        ${/hydrocortisone/i.test(d.name) ? `<button class="btn btn-secondary btn-sm" onclick="openRichiesta()" title="Modulo richiesta AIFA" style="margin-left:4px;background:#eaf0fb;color:#1a3a5c;border-color:#b0c4de;">📋</button>` : ''}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  updateSummary();
+  _updateSortHeaders();
+}
+
+/* Immissione rapida unità (aggiunge alla giacenza) */
+function addQty(i, val, inputEl) {
+  const v = parseFloat(val);
+  if (isNaN(v) || v <= 0) { alert('Inserisci un numero valido (> 0).'); return; }
+  drugs[i].qty = Math.round((drugs[i].qty + v) * 100) / 100;
+  drugs[i].refDate = todayStr();
+  save();
+  if (inputEl) inputEl.value = '';
+  render();
+}
+
+/* ================================================
+   SOMMARIO & BANNER
+   ================================================ */
+function updateSummary() {
+  let ok = 0, warn = 0, crit = 0;
+  const alerts = [];
+  drugs.forEach(d => {
+    const days = getDays(d);
+    const st   = statusOf(days);
+    if      (st === 'ok')   ok++;
+    else if (st === 'warn') { warn++; alerts.push({ ...d, days, st }); }
+    else                    { crit++; alerts.push({ ...d, days, st }); }
+  });
+
+  // Avvisi scadenza PT — aggiunti separatamente se non già presenti
+  const ptAlerts = [];
+  drugs.forEach(d => {
+    if (!d.pt || !d.ptExpiry) return;
+    const st = ptStatus(d);
+    if (st === 'expired' || st === 'crit' || st === 'warn') {
+      ptAlerts.push({ ...d, ptSt: st });
+    }
+  });
+
+  document.getElementById('cnt-total').textContent = drugs.length;
+  document.getElementById('cnt-ok').textContent    = ok;
+  document.getElementById('cnt-warn').textContent  = warn;
+  document.getElementById('cnt-crit').textContent  = crit;
+
+  const banner = document.getElementById('alert-banner');
+  const allAlerts = [...alerts, ...ptAlerts];
+  if (allAlerts.length > 0) {
+    banner.style.display = 'block';
+    const lines = [];
+    alerts.forEach(a => {
+      const icon  = a.st === 'crit' ? '🔴' : '🟡';
+      const dStr  = isFinite(a.days) ? `${a.days} gg rimasti` : '∞ gg';
+      const extra  = a.dpc  ? ' <span class="badge-dpc">DPC</span>'       : '';
+      const extra2 = a.nosub ? ' <span class="badge-nosub">Non sost.</span>' : '';
+      const extra3 = a.pt   ? ' <span class="badge-pt">PT</span>'          : '';
+      lines.push(`${icon} <strong>${esc(a.name)}</strong>${extra}${extra2}${extra3} &nbsp;— ${dStr}`);
+    });
+    ptAlerts.forEach(a => {
+      const days = ptDaysLeft(a);
+      const icon  = a.ptSt === 'expired' ? '🔴' : a.ptSt === 'crit' ? '🔴' : '🟡';
+      const dStr  = a.ptSt === 'expired'
+        ? `<strong>SCADUTO</strong> il ${fmtDate(a.ptExpiry)}`
+        : `PT scade il ${fmtDate(a.ptExpiry)} (${days} gg)`;
+      lines.push(`${icon} <strong>${esc(a.name)}</strong> <span class="badge-pt">PT</span> &nbsp;— ${dStr}`);
+    });
+    document.getElementById('alert-list').innerHTML = lines.join('<br>');
+  } else {
+    banner.style.display = 'none';
+  }
+  toggleMsgSection(alerts.length > 0 || ptAlerts.length > 0);
+}
+
+/* ================================================
+   CRUD
+   ================================================ */
+function addDrug() {
+  const name = document.getElementById('f-name').value.trim();
+  const pkg  = parseFloat(document.getElementById('f-pkg').value)  || 0;
+  const qty  = parseFloat(document.getElementById('f-qty').value)  || 0;
+  const dose = parseFloat(document.getElementById('f-dose').value);
+  const note  = document.getElementById('f-note').value.trim();
+  const dpc      = document.getElementById('f-dpc').checked;
+  const nosub    = document.getElementById('f-nosub').checked;
+  const pt       = document.getElementById('f-pt').checked;
+  const ptExpiry = pt ? (document.getElementById('f-pt-expiry').value || null) : null;
+
+  if (!name)                    { alert('Inserisci il nome del farmaco.'); return; }
+  if (isNaN(dose) || dose <= 0) { alert('Posologia non valida (> 0).'); return; }
+
+  drugs.push({ name, pkg, qty, dose, note, dpc, nosub, pt, ptExpiry, refDate: todayStr() });
+  save();
+  clearForm();
+  render();
+}
+
+function clearForm() {
+  ['f-name','f-pkg','f-qty','f-dose','f-note','f-pt-expiry'].forEach(id =>
+    document.getElementById(id).value = '');
+  ['f-dpc','f-nosub','f-pt'].forEach(id =>
+    document.getElementById(id).checked = false);
+  document.getElementById('f-pt-expiry-row').style.display = 'none';
+  document.getElementById('f-name').focus();
+}
+
+function deleteRow(i) {
+  if (!confirm(`Eliminare "${drugs[i].name}" dalla terapia?`)) return;
+  drugs.splice(i, 1);
+  save();
+  render();
+}
+
+function editRow(i) {
+  const d  = drugs[i];
+  const tr = document.querySelector(`tr[data-id="${i}"]`);
+  if (!tr) return;
+  tr.classList.add('editing');
+  tr.innerHTML = `
+    <td colspan="8" style="padding:12px 16px;background:#eef4ff;border-left:3px solid #1a6fa8;">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
+        <div>
+          <div style="font-size:0.71rem;color:#667;margin-bottom:3px;">Nome farmaco</div>
+          <input type="text" id="e-name" value="${esc(d.name)}"
+            style="width:190px;border:1.5px solid #aac4e8;border-radius:6px;padding:6px 8px;font-size:0.87rem;"/>
+        </div>
+        <div>
+          <div style="font-size:0.71rem;color:#667;margin-bottom:3px;">CPR / conf.</div>
+          <input type="number" id="e-pkg" value="${d.pkg}" min="0" step="1"
+            style="width:60px;border:1.5px solid #aac4e8;border-radius:6px;padding:6px 8px;font-size:0.87rem;"/>
+        </div>
+        <div>
+          <div style="font-size:0.71rem;color:#667;margin-bottom:3px;">Qtà disponibile</div>
+          <input type="number" id="e-qty" value="${d.qty}" min="0" step="1"
+            style="width:72px;border:1.5px solid #aac4e8;border-radius:6px;padding:6px 8px;font-size:0.87rem;"/>
+        </div>
+        <div>
+          <div style="font-size:0.71rem;color:#667;margin-bottom:3px;">Posologia (u./die)</div>
+          <input type="number" id="e-dose" value="${d.dose}" min="0.01" step="0.25"
+            style="width:72px;border:1.5px solid #aac4e8;border-radius:6px;padding:6px 8px;font-size:0.87rem;"/>
+        </div>
+        <div>
+          <div style="font-size:0.71rem;color:#667;margin-bottom:3px;">Note / Orari</div>
+          <input type="text" id="e-note" value="${esc(d.note||'')}"
+            style="width:190px;border:1.5px solid #aac4e8;border-radius:6px;padding:6px 8px;font-size:0.87rem;"/>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:0.71rem;color:#667;">Tipo ricetta</div>
+          <label style="font-size:0.78rem;color:#445;display:flex;align-items:center;gap:4px;">
+            <input type="checkbox" id="e-dpc" ${d.dpc ? 'checked' : ''}/> DPC
+          </label>
+          <label style="font-size:0.78rem;color:#445;display:flex;align-items:center;gap:4px;">
+            <input type="checkbox" id="e-nosub" ${d.nosub ? 'checked' : ''}/> Non sost.
+          </label>
+          <label style="font-size:0.78rem;color:#004a80;display:flex;align-items:center;gap:4px;">
+            <input type="checkbox" id="e-pt" ${d.pt ? 'checked' : ''}
+              onchange="document.getElementById('e-pt-expiry-row').style.display=this.checked?'flex':'none'"/> PT
+          </label>
+          <div id="e-pt-expiry-row" style="display:${d.pt ? 'flex' : 'none'};align-items:center;gap:5px;margin-top:2px;">
+            <span style="font-size:0.78rem;color:#004a80;">Scade:</span>
+            <input type="date" id="e-pt-expiry" value="${d.ptExpiry || ''}"
+              style="border:1.5px solid #70b8e0;border-radius:5px;padding:3px 6px;font-size:0.78rem;color:#004a80;"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-end;padding-bottom:1px;">
+          <button class="btn btn-primary btn-sm" onclick="saveRow(${i})">💾 Salva</button>
+          <button class="btn btn-danger btn-sm"  onclick="deleteRow(${i})">🗑️ Elimina</button>
+          <button class="btn btn-secondary btn-sm" onclick="render()">✖ Annulla</button>
+        </div>
+      </div>
+    </td>
+  `;
+  document.getElementById('e-name').focus();
+}
+
+function saveRow(i) {
+  const name  = document.getElementById('e-name').value.trim();
+  const pkg   = parseFloat(document.getElementById('e-pkg').value)  || 0;
+  const qty   = parseFloat(document.getElementById('e-qty').value)  || 0;
+  const dose  = parseFloat(document.getElementById('e-dose').value);
+  const note  = document.getElementById('e-note').value.trim();
+  const dpc      = document.getElementById('e-dpc').checked;
+  const nosub    = document.getElementById('e-nosub').checked;
+  const pt       = document.getElementById('e-pt').checked;
+  const ptExpiry = pt ? (document.getElementById('e-pt-expiry').value || null) : null;
+
+  if (!name)                    { alert('Il nome non può essere vuoto.'); return; }
+  if (isNaN(dose) || dose <= 0) { alert('Posologia non valida.'); return; }
+
+  drugs[i] = { name, pkg, qty, dose, note, dpc, nosub, pt, ptExpiry, refDate: drugs[i].refDate || todayStr() };
+  save();
+  render();
+}
+
+/* ================================================
+   UTILITÀ
+   ================================================ */
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ================================================
+   ESPORTA PDF PER FSE
+   ================================================ */
+function updatePrintHeader() {
+  const paziente = document.getElementById('pdf-paziente').value.trim() || '—';
+  const cf       = (document.getElementById('pdf-cf').value.trim().toUpperCase()) || '—';
+  const nascRaw  = document.getElementById('pdf-nascita').value;
+  const nasc     = nascRaw
+    ? new Date(nascRaw).toLocaleDateString('it-IT')
+    : '—';
+  const oggi = new Date().toLocaleDateString('it-IT', {
+    day: '2-digit', month: 'long', year: 'numeric'
+  });
+
+  document.getElementById('ph-paziente').textContent = paziente;
+  document.getElementById('ph-nascita').textContent  = nasc;
+  document.getElementById('ph-cf').textContent       = cf;
+  document.getElementById('ph-data').textContent     = oggi;
+  document.getElementById('pf-data').textContent     = 'Generato il ' + oggi;
+}
+
+function applyPrintColumns() {
+  // Costruisce CSS per nascondere le colonne non selezionate
+  // La col-1 (Farmaco) è sempre visibile
+  let css = '';
+  for (let n = 2; n <= 7; n++) {
+    const cb = document.getElementById('col-' + n);
+    if (cb && !cb.checked) {
+      css += `@media print { table th:nth-child(${n}), table td:nth-child(${n}) { display: none !important; } }\n`;
+    }
+  }
+  // Se le colonne sono personalizzate, usa table-layout:auto per riadattare le larghezze
+  const anyHidden = [2,3,4,5,6,7].some(n => {
+    const cb = document.getElementById('col-' + n);
+    return cb && !cb.checked;
+  });
+  if (anyHidden) {
+    css += '@media print { table { table-layout: auto !important; } }\n';
+  }
+  document.getElementById('print-col-style').textContent = css;
+}
+
+function exportPDF(mode) {
+  updatePrintHeader();
+  applyPrintColumns();
+  document.body.classList.remove('pdf-personal', 'pdf-fse');
+  document.body.classList.add(mode === 'fse' ? 'pdf-fse' : 'pdf-personal');
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      document.body.classList.remove('pdf-personal', 'pdf-fse');
+      document.getElementById('print-col-style').textContent = '';
+    }, 1000);
+  }, 120);
+}
+
+/* ================================================
+   MESSAGGIO PER IL MEDICO
+   ================================================ */
+function buildMessage() {
+  const doctor = document.getElementById('msg-doctor').value.trim();
+  const sender = document.getElementById('msg-sender').value.trim();
+  const filter = document.getElementById('msg-filter').value;
+  const box    = document.getElementById('msg-box');
+
+  const today    = new Date().toLocaleDateString('it-IT');
+  const greeting = doctor ? `Gentile ${doctor},` : 'Gentile medico,';
+  const closing  = sender ? `\nDistinti saluti,\n${sender}` : '';
+
+  // --- Seleziona farmaci in base al filtro ---
+  const selected = drugs.filter(d => {
+    if (filter === 'all') return true;
+    const st = statusOf(getDays(d));
+    if (filter === 'crit') return st === 'crit';
+    return st === 'warn' || st === 'crit';   // 'alarm'
+  });
+
+  let sezioneRicette = '';
+  if (selected.length > 0) {
+    const lines = selected.map(d => {
+      const days = getDays(d);
+      let dStr = '';
+      if (filter !== 'all') {
+        dStr = days === 0     ? '  (scorta ESAURITA)'
+             : isFinite(days) ? `  (scorta per ${days} ${days === 1 ? 'giorno' : 'giorni'})`
+             :                  '';
+      } else {
+        dStr = isFinite(days) ? `  (${days} gg rimasti)` : '';
+      }
+      const tags = (d.dpc ? ' [Ricetta DPC]' : '') + (d.nosub ? ' [Non sostituibile]' : '') + (d.pt ? (' [PT' + (d.ptExpiry ? ' scade '+fmtDate(d.ptExpiry) : '') + ']') : '');
+      return `  • ${d.name}${tags}${dStr}`;
+    }).join('\n');
+
+    const intro = filter === 'all'
+      ? 'le chiedo cortesemente di predisporre il rinnovo delle ricette per la terapia in corso:'
+      : 'le chiedo cortesemente di predisporre la ricetta per i seguenti farmaci in esaurimento:';
+
+    sezioneRicette = `${intro}\n\n${lines}`;
+  } else {
+    sezioneRicette = 'Al momento le scorte sono sufficienti per tutti i farmaci in terapia.';
+  }
+
+  // --- Farmaci con prescrizione speciale ---
+  const speciali = drugs.filter(d => d.dpc || d.nosub || d.pt);
+  let sezioneSpeciali = '';
+  if (speciali.length > 0) {
+    const righe = speciali.map(d => {
+      const tags = [
+        d.dpc   ? 'Ricetta DPC (non SSN)' : '',
+        d.nosub ? 'Non sostituibile'       : '',
+        d.pt    ? ('Piano Terapeutico' + (d.ptExpiry ? ` — scade ${fmtDate(d.ptExpiry)}` : '')) : '',
+      ].filter(Boolean).join(' · ');
+      return `  • ${d.name}  [${tags}]`;
+    }).join('\n');
+    sezioneSpeciali =
+`\n\nNota — farmaci con prescrizione speciale (da rinnovare con la tipologia corretta):
+
+${righe}`;
+  }
+
+  const text =
+`${greeting}
+
+${sezioneRicette}${sezioneSpeciali}
+
+Grazie per la disponibilità.${closing}
+
+— ${today}`;
+
+  box.innerText = text;
+}
+
+function copyMessage() {
+  const box = document.getElementById('msg-box');
+  const text = box.innerText;
+  if (!text || box.querySelector('.msg-empty')) return;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const ok = document.getElementById('copy-ok');
+    ok.style.display = 'inline';
+    setTimeout(() => { ok.style.display = 'none'; }, 2500);
+  }).catch(() => {
+    // Fallback: selezione manuale
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(box);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  });
+}
+
+/* Rigenera il messaggio quando cambia lo stato degli allarmi */
+function toggleMsgSection(hasAlerts) {
+  buildMessage();
+}
+
+/* ================================================
+   SYNC TRASPARENTE — File System Access API + iCloud
+   ================================================ */
+const FILE_NAME = 'farmaci-data.json';
+let   dirHandle = null;
+let   syncActive = false;
+
+// --- IndexedDB per conservare il directory handle tra sessioni ---
+function openDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('farmaci_sync_db', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('handles');
+    req.onsuccess  = e => res(e.target.result);
+    req.onerror    = e => rej(e);
+  });
+}
+async function storeHandle(h) {
+  try { const db = await openDB(); const tx = db.transaction('handles','readwrite'); tx.objectStore('handles').put(h,'dir'); } catch(e) {}
+}
+async function retrieveHandle() {
+  try {
+    const db = await openDB();
+    return await new Promise(res => {
+      const tx  = db.transaction('handles','readonly');
+      const req = tx.objectStore('handles').get('dir');
+      req.onsuccess = e => res(e.target.result || null);
+      req.onerror   = () => res(null);
+    });
+  } catch(e) { return null; }
+}
+
+// --- Permesso cartella ---
+async function ensurePermission(handle) {
+  if (!handle) return false;
+  try {
+    const perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm === 'granted') return true;
+    const req = await handle.requestPermission({ mode: 'readwrite' });
+    return req === 'granted';
+  } catch(e) { return false; }
+}
+
+// --- Leggi dal file JSON ---
+async function loadFromFile() {
+  if (!dirHandle) return false;
+  try {
+    const fh   = await dirHandle.getFileHandle(FILE_NAME);
+    const file = await fh.getFile();
+    const data = JSON.parse(await file.text());
+    if (Array.isArray(data.drugs) && data.drugs.length > 0) {
+      drugs = data.drugs;
+    }
+    if (data.alarmDays) alarmDays = data.alarmDays;
+    return true;
+  } catch(e) { return false; }
+}
+
+// --- Scrivi nel file JSON ---
+async function saveToFile() {
+  if (!dirHandle || !syncActive) return;
+  try {
+    const fh       = await dirHandle.getFileHandle(FILE_NAME, { create: true });
+    const writable = await fh.createWritable();
+    await writable.write(JSON.stringify({
+      drugs,
+      alarmDays,
+      savedAt: new Date().toISOString()
+    }, null, 2));
+    await writable.close();
+    setSyncStatus('ok', 'Sincronizzato', 'Aggiornato ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}));
+  } catch(e) {
+    setSyncStatus('warn', 'Errore scrittura', e.message);
+  }
+}
+
+// --- Collega cartella (click utente) ---
+async function connectFolder() {
+  if (!('showDirectoryPicker' in window)) {
+    alert('Il tuo browser non supporta questa funzione.\nUsa Chrome o Edge per la sincronizzazione automatica.');
+    return;
+  }
+  try {
+    dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    await storeHandle(dirHandle);
+    syncActive = true;
+    // Prova a leggere dati esistenti dal file
+    const loaded = await loadFromFile();
+    if (loaded) { render(); }
+    await saveToFile();
+    setSyncStatus('ok', 'Sincronizzato — ' + dirHandle.name, 'I dati vengono salvati automaticamente in questa cartella');
+    document.getElementById('btn-connect').textContent = '☁️ Cambia cartella';
+  } catch(e) {
+    if (e.name !== 'AbortError') setSyncStatus('warn', 'Collegamento annullato', '');
+  }
+}
+
+// --- Aggiorna UI striscia ---
+function setSyncStatus(state, label, sub) {
+  const dot = document.getElementById('sync-dot');
+  dot.className = 'sync-dot ' + state;
+  document.getElementById('sync-label').textContent = label;
+  document.getElementById('sync-sub').textContent   = sub;
+}
+
+// --- Avvio sync: recupera handle salvato ---
+async function initSync() {
+  if (!('showDirectoryPicker' in window)) {
+    setSyncStatus('off', 'Sync non disponibile su questo browser', 'Usa Chrome o Edge per la sincronizzazione automatica via iCloud');
+    const btn = document.getElementById('btn-connect');
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  const stored = await retrieveHandle();
+  if (!stored) return; // nessuna cartella precedente
+  const ok = await ensurePermission(stored);
+  if (!ok) {
+    setSyncStatus('warn', 'Autorizzazione richiesta', 'Clicca "Collega cartella" per riconnetterti');
+    return;
+  }
+  dirHandle  = stored;
+  syncActive = true;
+  const loaded = await loadFromFile();
+  if (loaded) { render(); }
+  await saveToFile();
+  setSyncStatus('ok', 'Sincronizzato — ' + dirHandle.name, 'I dati vengono salvati automaticamente in questa cartella');
+  document.getElementById('btn-connect').textContent = '☁️ Cambia cartella';
+}
+
+// --- Sovrascrivi save() per includere salvataggio su file e cloud ---
+function save() {
+  _saveCore();              // localStorage
+  saveToFile();             // + file nella cartella iCloud
+  _cloudWrite();            // + Firebase Firestore (se configurato)
+}
+
+/* ================================================
+   FIREBASE CLOUD SYNC
+   ================================================ */
+const FB_CFG_KEY  = 'farmaci_firebase_cfg';
+// Configurazione Firebase integrata
+const FB_BASE_CFG = {
+  apiKey:            "AIzaSyCj5u6pMaXPJhrkFYLbNPCStbF3taMTU7c",
+  authDomain:        "farmaci-ca400.firebaseapp.com",
+  projectId:         "farmaci-ca400",
+  storageBucket:     "farmaci-ca400.firebasestorage.app",
+  messagingSenderId: "938882299940",
+  appId:             "1:938882299940:web:a9a712860941c4741700b1"
+};
+let cloudCode   = null;   // codice personale attivo
+let cloudPollId = null;   // setInterval per polling
+let cloudLastWrite = 0;   // ms — evita loop di scrittura
+let isReadonly  = false;  // modalità sola lettura
+function applyReadonlyMode() {
+  isReadonly = true;
+  document.body.classList.add('readonly-mode');
+  const banner = document.getElementById('readonly-banner');
+  if (banner) banner.style.display = 'block';
+  // Nascondi elementi edit via CSS
+  if (!document.getElementById('readonly-style')) {
+    const s = document.createElement('style');
+    s.id = 'readonly-style';
+    s.textContent = 'body.readonly-mode .edit-only { display: none !important; }';
+    document.head.appendChild(s);
+  }
+}
+
+// URL REST Firestore
+function fsUrl(code) {
+  return `https://firestore.googleapis.com/v1/projects/${FB_BASE_CFG.projectId}`
+       + `/databases/(default)/documents/terapie/${encodeURIComponent(code)}`
+       + `?key=${FB_BASE_CFG.apiKey}`;
+}
+
+function setCloudStatus(cls, text) {
+  const el = document.getElementById('cloud-status-badge');
+  if (!el) return;
+  el.className = `cloud-status ${cls}`;
+  el.textContent = text;
+}
+
+function loadFbCfg() {
+  try { return JSON.parse(localStorage.getItem(FB_CFG_KEY) || 'null'); } catch(e) { return null; }
+}
+
+// Legge il documento da Firestore via REST
+async function _cloudRead(code) {
+  const res = await fetch(fsUrl(code));
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const doc = await res.json();
+  const str = doc.fields?.payload?.stringValue;
+  return str ? JSON.parse(str) : null;
+}
+
+// Scrive il documento su Firestore via REST
+async function _cloudWrite() {
+  if (!cloudCode || isReadonly) return;
+  try {
+    cloudLastWrite = Date.now();
+    await fetch(fsUrl(cloudCode), {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          payload:   { stringValue: JSON.stringify({ drugs, alarmDays }) },
+          savedAt:   { stringValue: new Date().toISOString() }
+        }
+      })
+    });
+    setCloudStatus('ok', '✅ Sincronizzato');
+  } catch(e) {
+    setCloudStatus('err', '⛔ Errore scrittura');
+    console.warn('Cloud write error:', e);
+  }
+}
+
+// Polling ogni 30 s — aggiorna se ci sono modifiche da un altro dispositivo
+async function _cloudPoll() {
+  if (!cloudCode) return;
+  try {
+    const data = await _cloudRead(cloudCode);
+    if (!data || !Array.isArray(data.drugs)) return;
+    const savedAt = data.savedAt ? new Date(data.savedAt).getTime() : 0;
+    if (savedAt <= cloudLastWrite + 2000) return; // echo dei propri write
+    drugs     = data.drugs;
+    alarmDays = data.alarmDays || alarmDays;
+    applyAutoScale(); // scala in base ai giorni trascorsi
+    _saveCore();
+    render();
+    document.getElementById('alarm-input').value       = alarmDays;
+    document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+    cloudLastWrite = Date.now();
+    setCloudStatus('ok', '✅ Sincronizzato');
+  } catch(e) { /* polling silenzioso */ }
+}
+
+function _cloudConnected(code) {
+  const label = isReadonly ? '👁️ Sola lettura — ' + code : '✅ Cloud attivo — ' + code;
+  setCloudStatus(isReadonly ? 'sync' : 'ok', label);
+  if (!isReadonly) document.getElementById('btn-disconnect').style.display = '';
+  document.getElementById('btn-genlink').style.display    = '';
+  document.getElementById('btn-genlink-ro').style.display = '';
+  document.getElementById('cloud-setup-body').style.display = 'none';
+  if (cloudPollId) clearInterval(cloudPollId);
+  cloudPollId = setInterval(_cloudPoll, 30000);
+}
+
+async function initCloud(personalCode) {
+  cloudCode = personalCode.trim();
+  if (!cloudCode) { alert('Inserisci il Codice personale.'); return; }
+  setCloudStatus('sync', '🔄 Connessione…');
+  try {
+    const data = await _cloudRead(cloudCode);
+    if (data && Array.isArray(data.drugs) && data.drugs.length > 0) {
+      drugs     = data.drugs;
+      alarmDays = data.alarmDays || alarmDays;
+      applyAutoScale(); // scala le quantità in base ai giorni trascorsi dall'ultimo salvataggio
+      _saveCore();
+      await _cloudWrite(); // aggiorna il cloud con le quantità già scalate
+      render();
+      document.getElementById('alarm-input').value       = alarmDays;
+      document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+    } else {
+      await _cloudWrite(); // prima connessione: carica dati locali
+    }
+    cloudLastWrite = Date.now();
+    localStorage.setItem(FB_CFG_KEY, JSON.stringify({ personalCode: cloudCode }));
+    _cloudConnected(cloudCode);
+  } catch(e) {
+    setCloudStatus('err', '⛔ Errore: ' + e.message);
+    console.error('Cloud init error:', e);
+  }
+}
+
+function saveCloudConfig() {
+  const code = document.getElementById('fb-code').value.trim();
+  if (!code) { alert('Inserisci il Codice personale.'); return; }
+  initCloud(code);
+}
+
+function genConfigLink() {
+  if (!cloudCode) return;
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify({ personalCode: cloudCode, mode: 'edit' }))));
+  const base    = window.location.href.split('#')[0];
+  document.getElementById('cfg-link-input').value = base + '#fbcfg=' + encoded;
+  const note = document.getElementById('cfg-link-note');
+  if (note) note.textContent = '⚠️ Link di modifica — condividilo solo con chi può modificare i dati.';
+  document.getElementById('cfg-link-box').style.display = '';
+}
+function genReadonlyLink() {
+  if (!cloudCode) return;
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify({ personalCode: cloudCode, mode: 'readonly' }))));
+  const base    = window.location.href.split('#')[0];
+  document.getElementById('cfg-link-input').value = base + '#fbcfg=' + encoded;
+  const note = document.getElementById('cfg-link-note');
+  if (note) note.textContent = '👁️ Link sola lettura — può essere condiviso liberamente. Chi lo riceve non può modificare i dati.';
+  document.getElementById('cfg-link-box').style.display = '';
+}
+
+function copyCfgLink() {
+  const inp = document.getElementById('cfg-link-input');
+  inp.select();
+  navigator.clipboard.writeText(inp.value).catch(() => {});
+  const btn = inp.nextElementSibling;
+  const orig = btn.textContent;
+  btn.textContent = '✔ Copiato!';
+  setTimeout(() => btn.textContent = orig, 2000);
+}
+
+// Rileva codice da URL hash (#fbcfg=…) — usato dal link "Genera link"
+function checkCfgFromHash() {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#fbcfg=')) return null;
+  try {
+    const json = decodeURIComponent(escape(atob(hash.slice(7))));
+    const cfg  = JSON.parse(json);
+    if (!cfg.personalCode) return null;
+    if (cfg.mode !== 'readonly') history.replaceState(null, '', window.location.pathname);
+    return cfg;
+  } catch(e) { return null; }
+}
+
+function disconnectCloud() {
+  if (cloudPollId) { clearInterval(cloudPollId); cloudPollId = null; }
+  cloudCode = null;
+  localStorage.removeItem(FB_CFG_KEY);
+  setCloudStatus('off', '⚫ Non configurato');
+  document.getElementById('btn-disconnect').style.display  = 'none';
+  document.getElementById('btn-genlink').style.display     = 'none';
+  document.getElementById('cfg-link-box').style.display    = 'none';
+  document.getElementById('cloud-setup-body').style.display = '';
+}
+
+/* ================================================
+   ESPORTA / IMPORTA DATI
+   ================================================ */
+function exportData() {
+  const payload = {
+    drugs,
+    alarmDays,
+    exportedAt: new Date().toISOString(),
+    version: STORAGE_KEY
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href     = url;
+  a.download = `farmaci_${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data.drugs) || data.drugs.length === 0)
+        throw new Error('Formato non riconosciuto.');
+      if (!confirm(`Importare ${data.drugs.length} farmaci dal file "${file.name}"?\nI dati attuali verranno sostituiti.`))
+        return;
+      drugs = data.drugs;
+      if (data.alarmDays) { alarmDays = data.alarmDays; saveAlarm(); }
+      applyAutoScale();
+      save();
+      render();
+      document.getElementById('alarm-input').value = alarmDays;
+      document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+      alert('✅ Importazione completata.');
+    } catch(err) {
+      alert('Errore durante l\'importazione: ' + err.message);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+/* ================================================
+   ESPORTA TXT
+   ================================================ */
+function exportTXT() {
+  const paziente = document.getElementById('pdf-paziente').value.trim() || 'N/D';
+  const nascRaw  = document.getElementById('pdf-nascita').value;
+  const nasc     = nascRaw ? new Date(nascRaw).toLocaleDateString('it-IT') : 'N/D';
+  const cf       = document.getElementById('pdf-cf').value.trim().toUpperCase() || 'N/D';
+  const oggi     = new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' });
+
+  const LINE  = '─'.repeat(90);
+  const DLINE = '═'.repeat(90);
+
+  // Intestazione
+  let txt = '';
+  txt += DLINE + '\n';
+  txt += '  TERAPIA FARMACOLOGICA\n';
+  txt += DLINE + '\n';
+  txt += `  Paziente : ${paziente}\n`;
+  txt += `  Nato il  : ${nasc}     C.F.: ${cf}\n`;
+  txt += `  Generato : ${oggi}\n`;
+  txt += DLINE + '\n\n';
+
+  // Colonne: Nome(36) | CPR(6) | Qtà(8) | Gg(6) | Stato(18) | Note
+  const H_NAME  = 'FARMACO';
+  const H_PKG   = 'CPR';
+  const H_QTY   = 'SCORTA';
+  const H_DOSE  = 'DOSE/DIE';
+  const H_DAYS  = 'GG';
+  const H_ST    = 'STATO';
+  const H_NOTE  = 'NOTE / ORARI';
+
+  function pad(s, n)  { return String(s).padEnd(n); }
+  function padL(s, n) { return String(s).padStart(n); }
+
+  // Spezza una stringa in righe di max w caratteri (word-wrap)
+  function wrapText(s, w) {
+    s = String(s);
+    if (s.length <= w) return [s];
+    const lines = [];
+    while (s.length > 0) {
+      if (s.length <= w) { lines.push(s); break; }
+      let cut = w;
+      const sp = s.lastIndexOf(' ', w);
+      if (sp > 0) cut = sp;
+      lines.push(s.slice(0, cut));
+      s = s.slice(cut).trimStart();
+    }
+    return lines.length ? lines : [''];
+  }
+
+  // Legge le colonne selezionate (stesse checkbox del PDF)
+  const col = {};
+  for (let n = 1; n <= 7; n++) {
+    const cb = document.getElementById('col-' + n);
+    col[n] = !cb || cb.checked;
+  }
+
+  // Definizione colonne: raw = valore grezzo, w = larghezza fissa
+  const cols = [
+    { id:1, hdr:H_NAME, w:36, raw: d => { const ptTxtExp=d.pt?(` [PT${d.ptExpiry?' scade '+fmtDate(d.ptExpiry):''}]`):''; const tags=(d.dpc?' [DPC]':'')+(d.nosub?' [Non sost.]':'')+ptTxtExp; return d.name+tags; } },
+    { id:2, hdr:H_PKG,  w:6,  raw: d => d.pkg>0?String(d.pkg):'—' },
+    { id:3, hdr:H_QTY,  w:12, raw: d => d.qty+' u.'+(d.pkg>0?` (${(d.qty/d.pkg).toFixed(1)} cf.)`:'') },
+    { id:4, hdr:H_DOSE, w:10, raw: d => d.dose+'/die' },
+    { id:5, hdr:H_DAYS, w:5,  raw: d => { const days=getDays(d); return isFinite(days)?String(days):'∞'; } },
+    { id:6, hdr:H_ST,   w:18, raw: d => { const st=statusOf(getDays(d)); return st==='ok'?'OK':st==='warn'?'Ricetta':'Scorta critica'; } },
+    { id:7, hdr:H_NOTE, w:35, raw: d => d.note||'' },
+  ];
+
+  const activeCols = cols.filter(c => col[c.id]);
+  const SEP = ' ';
+  const dynLine = '─'.repeat(activeCols.reduce((sum,c) => sum + c.w + SEP.length, -SEP.length));
+
+  // Riga intestazione
+  txt += activeCols.map(c =>
+    c.id===5 ? padL(c.hdr,c.w) : pad(c.hdr,c.w)
+  ).join(SEP) + '\n';
+  txt += dynLine + '\n';
+
+  // Righe dati con word-wrap: ogni farmaco può occupare più righe
+  drugs.forEach(d => {
+    const wrapped = activeCols.map(c => wrapText(c.raw(d), c.w));
+    const maxLines = Math.max(...wrapped.map(w => w.length));
+    for (let line = 0; line < maxLines; line++) {
+      txt += activeCols.map((c, i) => {
+        const content = wrapped[i][line] || '';
+        return c.id===5 ? padL(content, c.w) : pad(content, c.w);
+      }).join(SEP) + '\n';
+    }
+    if (maxLines > 1) txt += '\n'; // riga vuota dopo farmaci multi-riga
+  });
+
+  txt += dynLine + '\n\n';
+
+  // Riepilogo
+  const ok   = drugs.filter(d => statusOf(getDays(d)) === 'ok').length;
+  const warn = drugs.filter(d => statusOf(getDays(d)) === 'warn').length;
+  const crit = drugs.filter(d => statusOf(getDays(d)) === 'crit').length;
+  txt += `  Totale farmaci: ${drugs.length}   `;
+  txt += `OK: ${ok}   Da ricetta: ${warn}   Critici: ${crit}\n`;
+
+  // Allarmi
+  const allerte = drugs.filter(d => statusOf(getDays(d)) !== 'ok');
+  if (allerte.length > 0) {
+    txt += '\n' + DLINE + '\n';
+    txt += '  DA RICHIEDERE AL MEDICO\n';
+    txt += DLINE + '\n';
+    allerte.forEach(d => {
+      const days  = getDays(d);
+      const dStr  = days === 0 ? 'ESAURITO' : isFinite(days) ? `${days} gg rimasti` : '';
+      const ptTxtAlert = d.pt ? (` [PT${d.ptExpiry ? ' scade '+fmtDate(d.ptExpiry) : ''}]`) : '';
+      const tags  = (d.dpc ? ' [DPC]' : '') + (d.nosub ? ' [Non sost.]' : '') + ptTxtAlert;
+      const urgente = statusOf(days) === 'crit' ? '  ⚠ URGENTE' : '';
+      txt += `  • ${d.name}${tags}  —  ${dStr}${urgente}\n`;
+    });
+    txt += DLINE + '\n';
+  }
+
+  // Su mobile mostra modale, su desktop scarica il file
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    document.getElementById('txt-modal-content').value = txt;
+    document.getElementById('txt-modal-overlay').classList.add('open');
+  } else {
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const date = new Date().toISOString().slice(0, 10);
+    a.href     = url;
+    a.download = `terapia_${date}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+}
+function closeTxtModal() {
+  document.getElementById('txt-modal-overlay').classList.remove('open');
+}
+function copyTxtModal() {
+  const ta = document.getElementById('txt-modal-content');
+  ta.select();
+  document.execCommand('copy');
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✅ Copiato!';
+  setTimeout(() => btn.textContent = orig, 1800);
+}
+async function shareTxtModal() {
+  const txt = document.getElementById('txt-modal-content').value;
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Terapia farmacologica',
+        text: txt,
+      });
+    } catch(e) { if (e.name !== 'AbortError') alert('Condivisione non riuscita.'); }
+  } else {
+    // Fallback: copia
+    const ta = document.getElementById('txt-modal-content');
+    ta.select();
+    document.execCommand('copy');
+    alert('Condivisione non disponibile su questo browser — testo copiato negli appunti.');
+  }
+}
+
+/* ================================================
+   AVVIO
+   ================================================ */
+load();
+render();
+updateTimestamp();
+document.getElementById('alarm-input').value = alarmDays;
+document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+
+// Valori predefiniti paziente / MMG
+(function initDefaults() {
+  const elPaz = document.getElementById('pdf-paziente');
+  const elNas = document.getElementById('pdf-nascita');
+  const elCf  = document.getElementById('pdf-cf');
+  const elDoc = document.getElementById('msg-doctor');
+  const elSnd = document.getElementById('msg-sender');
+  if (!elPaz.value) elPaz.value = 'Alessandro PREVIATI';
+  if (!elNas.value) elNas.value = '1992-11-12';
+  if (!elCf.value)  elCf.value  = 'PRVLSN92S12D548Q';
+  if (!elDoc.value) elDoc.value = 'Dott.ssa BORTOLOTTI Maria Cristina';
+  if (!elSnd.value) elSnd.value = 'Alessandro PREVIATI';
+  updatePrintHeader();
+  buildMessage();
+})();
+
+/* ================================================
+   MODULO RICHIESTA HYDROCORTISONE ROUSSEL
+   ================================================ */
+const RICHIESTA_CFG_KEY = 'farmaci_richiesta_cfg_v1';
+const RICHIESTA_CFG_DEFAULT = {
+  determina : '556/2026',
+  destNome  : 'Pharmaidea S.r.l.',
+  destVia   : 'Via del Commercio, 5',
+  destCitta : '25039 Travagliato (BS)',
+  destTel   : '800 373 555 – Tasto 3',
+  destEmail : 'Ospedaliero@pharmaidea.com'
+};
+
+function _getRichiestaCfg() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RICHIESTA_CFG_KEY) || 'null');
+    return saved ? { ...RICHIESTA_CFG_DEFAULT, ...saved } : { ...RICHIESTA_CFG_DEFAULT };
+  } catch(e) { return { ...RICHIESTA_CFG_DEFAULT }; }
+}
+
+function _fillCfgFields(cfg) {
+  document.getElementById('cfg-determina').value  = cfg.determina;
+  document.getElementById('cfg-dest-nome').value  = cfg.destNome;
+  document.getElementById('cfg-dest-via').value   = cfg.destVia;
+  document.getElementById('cfg-dest-citta').value = cfg.destCitta;
+  document.getElementById('cfg-dest-tel').value   = cfg.destTel;
+  document.getElementById('cfg-dest-email').value = cfg.destEmail;
+}
+
+function saveRichiestaCfg() {
+  const cfg = {
+    determina : document.getElementById('cfg-determina').value.trim(),
+    destNome  : document.getElementById('cfg-dest-nome').value.trim(),
+    destVia   : document.getElementById('cfg-dest-via').value.trim(),
+    destCitta : document.getElementById('cfg-dest-citta').value.trim(),
+    destTel   : document.getElementById('cfg-dest-tel').value.trim(),
+    destEmail : document.getElementById('cfg-dest-email').value.trim()
+  };
+  try { localStorage.setItem(RICHIESTA_CFG_KEY, JSON.stringify(cfg)); } catch(e) {}
+  // Aggiorna il modulo visibile
+  const dottore = (document.getElementById('msg-doctor').value || '').trim() || '___________________________';
+  document.getElementById('richiesta-form-body').innerHTML = _buildRichiestaHTML(dottore, cfg);
+  // Feedback visivo sul pulsante
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✓ Salvato';
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+function resetRichiestaCfg() {
+  _fillCfgFields(RICHIESTA_CFG_DEFAULT);
+  try { localStorage.removeItem(RICHIESTA_CFG_KEY); } catch(e) {}
+}
+
+function toggleRichiestaCfg() {
+  document.getElementById('richiesta-cfg').classList.toggle('open');
+}
+
+function _buildRichiestaHTML(dottore, cfg) {
+  cfg = cfg || _getRichiestaCfg();
+  return `
+    <div class="req-aifa-ref">Determina Pres. – ${esc(cfg.determina)}</div>
+    <div style="font-weight:700;text-align:center;margin-bottom:4px;font-size:0.9rem;">ALLEGATO 1</div>
+    <div style="text-align:center;font-weight:700;text-decoration:underline;margin-bottom:20px;">Modulo di richiesta fornitura del medicinale importato</div>
+
+    <div class="req-dest">
+      Spett.le <strong>${esc(cfg.destNome)}</strong><br>
+      ${esc(cfg.destVia)}<br>
+      ${esc(cfg.destCitta)}<br>
+      n. verde ${esc(cfg.destTel)}<br>
+      E-mail: ${esc(cfg.destEmail)}
+    </div>
+
+    <div class="req-body">
+      Il sottoscritto medico Dott. <span class="req-field"><strong>${esc(dottore)}</strong></span>, in servizio
+      presso <span class="req-field"><strong>AUSL 109 MMG</strong></span>,
+    </div>
+
+    <div class="req-section-title">CHIEDE</div>
+
+    <div class="req-body">
+      alla <strong>PHOENIX LABS Unlimited Company</strong> la fornitura <strong>a titolo gratuito</strong> del medicinale<br>
+      <span class="req-drug">"HYDROCORTISONE ROUSSEL® (hydrocortisone) 10mg comprimé"</span><br>
+      nella quantità di <span class="req-qty"><strong>300 compresse – (12 conf. da 25 cps/cad)</strong></span>
+    </div>
+
+    <div class="req-body">per la cura del/i paziente/i affetto/i da:</div>
+
+    <div class="req-checkboxes">
+      <div class="req-check-row">☐ Morbo di Addison, surrenectomia <span class="req-check-field"></span></div>
+      <div class="req-check-row">☐ Sindrome di Debré-Fibiger <span class="req-check-field"></span></div>
+      <div class="req-check-row">☑ Sindrome di Sheehan, insufficienza ipofisaria di varie cause <span class="req-check-field"><strong>XXX</strong></span></div>
+      <div class="req-check-row">☐ Iperplasia surrenalica congenita (Stress dose in paziente con farmaci disponibili in Italia)</div>
+      <div class="req-check-row">☐ Iperplasia surrenalica congenita (paziente non candidato al trattamento con farmaci disponibili in Italia)</div>
+    </div>
+
+    <div class="req-note">
+      Tale medicinale verrà utilizzato sotto la diretta responsabilità dello scrivente Medico curante, previo
+      ottenimento, ai sensi del D.M. 1 settembre 1995, del consenso informato del paziente o, in caso di
+      minori o incapaci, di chi esercita la tutela o curatela.
+    </div>
+
+    <div>Data ____________________</div>
+
+    <div class="req-sigs">
+      <div class="req-sig-row">
+        Il <strong>Medico curante</strong> (firma per esteso e timbro)
+        <span class="req-sig-line"></span>
+      </div>
+      <div style="font-style:italic;margin-bottom:6px;">per gli aspetti di propria competenza:</div>
+      <div class="req-sig-row">
+        <strong>Il Responsabile della struttura sanitaria/Dirigente della Farmacia Ospedaliera</strong><br>
+        (firma per esteso e timbro)
+        <span class="req-sig-line"></span>
+      </div>
+      <div>
+        Indirizzo della Farmacia Ospedaliera presso la quale deve essere effettuata la fornitura:<br>
+        <span class="req-sig-line" style="width:420px;margin-top:10px;"></span>
+      </div>
+    </div>
+  `;
+}
+
+function openRichiesta() {
+  const cfg     = _getRichiestaCfg();
+  const dottore = (document.getElementById('msg-doctor').value || '').trim() || '___________________________';
+  _fillCfgFields(cfg);
+  document.getElementById('richiesta-form-body').innerHTML = _buildRichiestaHTML(dottore, cfg);
+  document.getElementById('richiesta-overlay').classList.add('open');
+}
+
+function closeRichiesta() {
+  document.getElementById('richiesta-cfg').classList.remove('open');
+  document.getElementById('richiesta-overlay').classList.remove('open');
+}
+
+function stampaRichiesta() {
+  const cfg     = _getRichiestaCfg();
+  const dottore = (document.getElementById('msg-doctor').value || '').trim() || '___________________________';
+  const formHTML = _buildRichiestaHTML(dottore, cfg);
+  const isIOS   = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (isIOS) {
+    // iOS Safari non supporta window.print() da dentro overlay position:fixed,
+    // né blob-URL navigation né target=_blank affidabili.
+    // Soluzione definitiva: sostituiamo il body con SOLO il modulo.
+    // L'utente usa Share→Stampa nativo di Safari → vede solo il modulo → PDF pulito.
+    // "Torna" fa location.reload(); i dati sono salvati in localStorage.
+    const page = `
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a1a;background:white;}
+  .ios-bar{background:#1a3a5c;padding:10px 14px;display:flex;align-items:center;
+           gap:10px;position:sticky;top:0;z-index:10;}
+  .ios-back{background:white;color:#1a3a5c;border:none;border-radius:6px;
+            padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;}
+  .ios-tip{background:#e8f4fd;border-bottom:2px solid #90c8f0;
+           padding:12px 16px;font-size:13px;line-height:1.75;}
+  .ios-tip b{color:#0a5a8a;}
+  .step{display:flex;gap:8px;margin-bottom:4px;align-items:flex-start;}
+  .n{background:#0a5a8a;color:white;border-radius:50%;min-width:20px;height:20px;
+     display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:2px;}
+  .form-wrap{padding:16px 18px;}
+  /* stili modulo */
+  .req-dest{text-align:right;font-size:12px;margin-bottom:18px;line-height:1.6;}
+  .req-body{margin-bottom:12px;line-height:1.8;}
+  .req-field{border-bottom:1px solid #333;min-width:140px;display:inline-block;padding:0 2px;}
+  .req-section-title{text-align:center;font-weight:700;font-size:14px;margin:12px 0 8px;}
+  .req-drug{font-weight:700;font-size:14px;}
+  .req-qty{border-bottom:1px solid #333;display:inline-block;min-width:200px;}
+  .req-checkboxes{margin:8px 0 8px 4px;}
+  .req-check-row{display:flex;align-items:baseline;gap:6px;margin-bottom:5px;font-size:12px;}
+  .req-check-field{border-bottom:1px solid #555;display:inline-block;min-width:60px;margin-left:3px;}
+  .req-note{font-size:12px;margin:10px 0;line-height:1.6;}
+  .req-sig-row{margin-bottom:16px;}
+  .req-sig-line{border-bottom:1px solid #333;width:260px;display:block;margin-top:6px;height:1px;}
+  .req-aifa-ref{font-size:11px;color:#555;text-align:right;margin-bottom:4px;}
+  @media print{.ios-bar,.ios-tip{display:none!important;} body{padding:10mm 14mm;}}
+</style>
+<div class="ios-bar">
+  <button class="ios-back" onclick="location.reload()">← Torna a Farmaci</button>
+</div>
+<div class="ios-tip">
+  <b>📄 Come salvare come PDF</b><br>
+  <div class="step"><div class="n">1</div><div>Tocca <b>Condividi ⬆</b> in fondo a Safari</div></div>
+  <div class="step"><div class="n">2</div><div>Seleziona <b>"Stampa"</b></div></div>
+  <div class="step"><div class="n">3</div><div>Nell'anteprima <b>avvicina due dita</b> (pinch open)</div></div>
+  <div class="step"><div class="n">4</div><div>Tocca <b>Condividi ⬆ → Salva su File</b></div></div>
+</div>
+<div class="form-wrap">${formHTML}</div>`;
+
+    document.body.innerHTML = page;
+  } else {
+    const printArea = document.getElementById('richiesta-print-area');
+    printArea.innerHTML = formHTML;
+    printArea.style.display = 'block';
+    window.print();
+    printArea.style.display = 'none';
+    printArea.innerHTML = '';
+  }
+}
+
+function chiudiGuidaIOS() {
+  document.getElementById('ios-print-guide').style.display = 'none';
+  const printArea = document.getElementById('richiesta-print-area');
+  printArea.style.display = 'none';
+  printArea.innerHTML = '';
+}
+
+function apriAIFA() {
+  // window.open bloccato su iOS dentro overlay fixed → navighiamo nella stessa scheda
+  window.location.href = 'https://www.aifa.gov.it/web/guest/farmaci-carenti';
+}
+
+initSync();   // avvia il tentativo di riconnessione automatica
+
+// Riconnessione automatica al cloud all'apertura
+// Auto-connessione cloud (codice predefinito: AlePrev1992)
+(function autoInitCloud() {
+  const DEFAULT_CODE = 'AlePrev1992';
+  const fromHash = checkCfgFromHash();
+  const resolved = fromHash || loadFbCfg();
+  const code = (resolved && resolved.personalCode) ? resolved.personalCode : DEFAULT_CODE;
+  if (resolved && resolved.mode === 'readonly') applyReadonlyMode();
+  document.getElementById('fb-code').value = code;
+  initCloud(code);
+})();
+</script>
+</body>
+</html>

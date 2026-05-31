@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farmacie di turno</title>
+<style>
+  :root {
+    --blue-dark: #1F4E79;
+    --blue-mid: #2E75B6;
+    --blue-light: #D6E4F0;
+    --red: #C00000;
+    --green: #375623;
+    --bg: #F5F8FC;
+    --white: #fff;
+    --border: #CBD5E0;
+    --text: #1a202c;
+    --muted: #718096;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+  header {
+    background: var(--blue-dark);
+    color: #fff;
+    padding: 18px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: .3px; }
+  header p  { font-size: .78rem; opacity: .75; }
+
+  .toolbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .oggi-badge {
+    background: var(--red);
+    color: #fff;
+    font-weight: 700;
+    font-size: .78rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .today-label { font-size: .82rem; color: var(--muted); }
+  .spacer { flex: 1; }
+  .btn-scroll {
+    background: var(--blue-dark);
+    color: #fff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: .82rem;
+    font-weight: 600;
+  }
+  .btn-scroll:hover { background: var(--blue-mid); }
+
+  main { padding: 20px; max-width: 900px; margin: 0 auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--white);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,.08);
+  }
+  thead th {
+    background: var(--blue-dark);
+    color: #fff;
+    padding: 10px 12px;
+    text-align: center;
+    font-size: .8rem;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  tbody tr { border-bottom: 1px solid #e8edf2; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td {
+    padding: 8px 12px;
+    text-align: center;
+    font-size: .85rem;
+    vertical-align: middle;
+  }
+  .col-week { color: var(--muted); font-size: .78rem; width: 70px; }
+  .col-date { width: 110px; font-variant-numeric: tabular-nums; }
+  .col-loc  { font-weight: 600; }
+
+  /* Color bands */
+  .c-A { background: #FFF9E6; }
+  .c-B { background: #EFF7EC; }
+  .c-C { background: #EAF4F8; }
+  .c-D { background: #FDF0EF; }
+  .c-E { background: #F2EEF7; }
+  .c-F { background: #FDF3EC; }
+  .c-G { background: #F4F4F4; }
+  .c-H { background: #EDF7ED; }
+
+  /* TODAY row */
+  tr.today-row {
+    outline: 3px solid var(--red);
+    outline-offset: -2px;
+    position: relative;
+  }
+  tr.today-row td { background: #fff0f0 !important; }
+  .today-pill {
+    display: inline-block;
+    background: var(--red);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .source {
+    text-align: center;
+    color: var(--muted);
+    font-size: .72rem;
+    margin-top: 18px;
+    padding-bottom: 30px;
+  }
+  .source a { color: var(--blue-mid); }
+
+  @media (max-width: 600px) {
+    main { padding: 12px 8px; }
+    thead th, tbody td { padding: 7px 6px; font-size: .78rem; }
+    .col-date { width: 90px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Farmacie di turno</h1>
+  <p>Comuni di: Copparo · Jolanda di Savoia · Riva del Po · Tresignana</p>
+</header>
+
+<div class="toolbar">
+  <span class="oggi-badge" id="oggi-badge">◄ OGGI</span>
+  <span class="today-label" id="today-label"></span>
+  <span class="spacer"></span>
+  <button class="btn-scroll" onclick="scrollToToday()">Vai alla settimana corrente</button>
+</div>
+
+<main>
+  <table id="cal">
+    <thead>
+      <tr>
+        <th>Sett.</th>
+        <th>Dal</th>
+        <th>Al</th>
+        <th>Località 1</th>
+        <th>Località 2</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <p class="source">Dati: <a href="https://www.ausl.fe.it/strutture/altre-strutture-territoriali/farmacie-convenzionate/farmacie-convenzionate-it" target="_blank">Portale AUSL Ferrara</a> – aggiornato 2026</p>
+</main>
+
+<script>
+const weeks = [
+  [1,"2025-12-27","2026-01-03","Tamara","Serravalle","A"],
+  [2,"2026-01-03","2026-01-10","Alberone","Formignana","B"],
+  [3,"2026-01-10","2026-01-17","Copparo","Rero","C"],
+  [4,"2026-01-17","2026-01-24","Jolanda di Savoia","Ro Ferrarese","D"],
+  [5,"2026-01-24","2026-01-31","Cologna","Sabbioncello S. Vittore","E"],
+  [6,"2026-01-31","2026-02-07","Ambrogio","Gherardi","F"],
+  [7,"2026-02-07","2026-02-14","Cesta","Tresigallo","G"],
+  [8,"2026-02-14","2026-02-21","Copparo","Berra","H"],
+  [9,"2026-02-21","2026-02-28","Tamara","Serravalle","A"],
+  [10,"2026-02-28","2026-03-07","Alberone","Formignana","B"],
+  [11,"2026-03-07","2026-03-14","Copparo","Rero","C"],
+  [12,"2026-03-14","2026-03-21","Jolanda di Savoia","Ro Ferrarese","D"],
+  [13,"2026-03-21","2026-03-28","Cologna","Sabbioncello S. Vittore","E"],
+  [14,"2026-03-28","2026-04-04","Ambrogio","Gherardi","F"],
+  [15,"2026-04-04","2026-04-11","Cesta","Tresigallo","G"],
+  [16,"2026-04-11","2026-04-18","Copparo","Berra","H"],
+  [17,"2026-04-18","2026-04-25","Tamara","Serravalle","A"],
+  [18,"2026-04-25","2026-05-02","Alberone","Formignana","B"],
+  [19,"2026-05-02","2026-05-09","Copparo","Rero","C"],
+  [20,"2026-05-09","2026-05-16","Jolanda di Savoia","Ro Ferrarese","D"],
+  [21,"2026-05-16","2026-05-23","Cologna","Sabbioncello S. Vittore","E"],
+  [22,"2026-05-23","2026-05-30","Ambrogio","Gherardi","F"],
+  [23,"2026-05-30","2026-06-06","Cesta","Tresigallo","G"],
+  [24,"2026-06-06","2026-06-13","Copparo","Berra","H"],
+  [25,"2026-06-13","2026-06-20","Tamara","Serravalle","A"],
+  [26,"2026-06-20","2026-06-27","Alberone","Formignana","B"],
+  [27,"2026-06-27","2026-07-04","Copparo","Rero","C"],
+  [28,"2026-07-04","2026-07-11","Jolanda di Savoia","Ro Ferrarese","D"],
+  [29,"2026-07-11","2026-07-18","Cologna","Sabbioncello S. Vittore","E"],
+  [30,"2026-07-18","2026-07-25","Ambrogio","Gherardi","F"],
+  [31,"2026-07-25","2026-08-01","Cesta","Tresigallo","G"],
+  [32,"2026-08-01","2026-08-08","Copparo","Berra","H"],
+  [33,"2026-08-08","2026-08-15","Tamara","Serravalle","A"],
+  [34,"2026-08-15","2026-08-22","Alberone","Formignana","B"],
+  [35,"2026-08-22","2026-08-29","Copparo","Rero","C"],
+  [36,"2026-08-29","2026-09-05","Jolanda di Savoia","Ro Ferrarese","D"],
+  [37,"2026-09-05","2026-09-12","Cologna","Sabbioncello S. Vittore","E"],
+  [38,"2026-09-12","2026-09-19","Ambrogio","Gherardi","F"],
+  [39,"2026-09-19","2026-09-26","Cesta","Tresigallo","G"],
+  [40,"2026-09-26","2026-10-03","Copparo","Berra","H"],
+  [41,"2026-10-03","2026-10-10","Tamara","Serravalle","A"],
+  [42,"2026-10-10","2026-10-17","Alberone","Formignana","B"],
+  [43,"2026-10-17","2026-10-24","Copparo","Rero","C"],
+  [44,"2026-10-24","2026-10-31","Jolanda di Savoia","Ro Ferrarese","D"],
+  [45,"2026-10-31","2026-11-07","Cologna","Sabbioncello S. Vittore","E"],
+  [46,"2026-11-07","2026-11-14","Ambrogio","Gherardi","F"],
+  [47,"2026-11-14","2026-11-21","Cesta","Tresigallo","G"],
+  [48,"2026-11-21","2026-11-28","Copparo","Berra","H"],
+  [49,"2026-11-28","2026-12-05","Tamara","Serravalle","A"],
+  [50,"2026-12-05","2026-12-12","Alberone","Formignana","B"],
+  [51,"2026-12-12","2026-12-19","Copparo","Rero","C"],
+  [52,"2026-12-19","2026-12-26","Jolanda di Savoia","Ro Ferrarese","D"],
+  [53,"2026-12-26","2027-01-02","Cologna","Sabbioncello S. Vittore","E"],
+];
+
+function fmt(iso) {
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+const today = new Date();
+today.setHours(0,0,0,0);
+let todayRowEl = null;
+
+const tbody = document.getElementById('tbody');
+weeks.forEach(([wk, from, to, loc1, loc2, cls]) => {
+  const dFrom = new Date(from);
+  const dTo   = new Date(to);
+  const isToday = today >= dFrom && today < dTo;
+
+  const tr = document.createElement('tr');
+  tr.className = `c-${cls}` + (isToday ? ' today-row' : '');
+
+  const loc1Html = isToday
+    ? `${loc1} <span class="today-pill">◄ OGGI</span>`
+    : loc1;
+
+  tr.innerHTML = `
+    <td class="col-week">Sett.&nbsp;${String(wk).padStart(2,'0')}</td>
+    <td class="col-date">${fmt(from)}</td>
+    <td class="col-date">${fmt(to)}</td>
+    <td class="col-loc">${loc1Html}</td>
+    <td class="col-loc">${loc2}</td>
+  `;
+  tbody.appendChild(tr);
+  if (isToday) todayRowEl = tr;
+});
+
+// Toolbar date
+const opts = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
+document.getElementById('today-label').textContent =
+  'Oggi: ' + today.toLocaleDateString('it-IT', opts);
+
+function scrollToToday() {
+  if (todayRowEl) {
+    todayRowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+// Auto-scroll on load
+window.addEventListener('load', () => {
+  if (todayRowEl) setTimeout(() => scrollToToday(), 300);
+});
+</script>
+</body>
+</html>

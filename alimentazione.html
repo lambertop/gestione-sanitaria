@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Gestione Alimentazione</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: #f0f4f8; color: #2d3748; min-height: 100vh; }
+
+  header { background: linear-gradient(135deg, #1a8a4a 0%, #0f5c30 100%);
+           color: white; padding: 14px 24px;
+           display: flex; align-items: center; justify-content: space-between;
+           box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: .3px; }
+  header .subtitle { font-size: 0.75rem; opacity: .8; margin-top: 2px; }
+  .header-right { text-align: right; font-size: 0.72rem; opacity: .85; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px 16px; }
+
+  /* Cards */
+  .card { background: white; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.08);
+          margin-bottom: 18px; }
+
+  /* Summary bar */
+  .summary { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .card.ok   { border-left: 4px solid #38a169; }
+  .card.warn { border-left: 4px solid #d69e2e; }
+  .card.crit { border-left: 4px solid #e53e3e; }
+  .card.info { border-left: 4px solid #3182ce; }
+  .sum-card { padding: 14px 18px; min-width: 120px; flex: 1; }
+  .sum-card .num { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+  .sum-card .lbl { font-size: 0.72rem; color: #718096; margin-top: 4px; text-transform: uppercase; letter-spacing: .4px; }
+  .card.ok   .num { color: #38a169; }
+  .card.warn .num { color: #d69e2e; }
+  .card.crit .num { color: #e53e3e; }
+  .card.info .num { color: #3182ce; }
+
+  /* Alert banner */
+  .alert-banner { display: none; padding: 14px 20px; border-radius: 12px;
+                  background: #fffbeb; border: 1.5px solid #f6ad55; margin-bottom: 18px; }
+  .banner-title { font-weight: 700; color: #c05621; margin-bottom: 8px; font-size: 0.9rem; }
+  #alert-list { font-size: 0.85rem; line-height: 1.8; color: #2d3748; }
+
+  /* Table card */
+  .table-card { border-radius: 12px; overflow: hidden;
+                box-shadow: 0 1px 6px rgba(0,0,0,.08); background: white; }
+  .table-header { padding: 14px 20px; display: flex; align-items: center;
+                  justify-content: space-between; flex-wrap: wrap; gap: 10px;
+                  border-bottom: 1px solid #e8eef5; }
+  .table-header h2 { font-size: 1rem; font-weight: 700; color: #2d3748; }
+  .search-box { border: 1.5px solid #dde5ef; border-radius: 8px; padding: 7px 12px;
+                font-size: 0.85rem; width: 200px; background: #fafcff; }
+  .search-box:focus { outline: none; border-color: #1a8a4a; }
+
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 700px; }
+  thead th {
+    background: #f5f8fc; padding: 10px 13px; text-align: left;
+    font-size: 0.72rem; font-weight: 700; color: #5a6a7a;
+    text-transform: uppercase; letter-spacing: .5px;
+    border-bottom: 1.5px solid #e8eef5; white-space: nowrap;
+  }
+  thead th.sortable { cursor: pointer; user-select: none; }
+  thead th.sortable:hover { background: #e8f5ee; color: #1a8a4a; }
+  thead th.sort-asc::after  { content: ' ▲'; color: #1a8a4a; font-size: .65rem; }
+  thead th.sort-desc::after { content: ' ▼'; color: #1a8a4a; font-size: .65rem; }
+
+  td { padding: 10px 13px; border-bottom: 1px solid #f0f4f8; font-size: 0.88rem; vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #f7faf7; }
+  tbody tr.editing { background: #eef8f1 !important; }
+
+  .item-name { font-weight: 600; color: #1a3a1a; }
+  .qty-wrap { display: flex; flex-direction: column; gap: 3px; }
+  .qty-val { font-weight: 600; }
+  .end-date { font-size: 0.8rem; color: #718096; }
+
+  .days-ok   { color: #276749; font-weight: 700; }
+  .days-warn { color: #b7791f; font-weight: 700; }
+  .days-crit { color: #c53030; font-weight: 700; }
+
+  .pill { display: inline-block; padding: 3px 9px; border-radius: 20px;
+          font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+  .pill.ok   { background: #c6f6d5; color: #276749; }
+  .pill.warn { background: #fef3c7; color: #92400e; }
+  .pill.crit { background: #fed7d7; color: #9b2c2c; }
+
+  .note-cell { font-size: 0.82rem; color: #4a5568; max-width: 200px; }
+
+  /* Quick input */
+  .quick-row { display: flex; gap: 4px; align-items: center; margin-top: 4px; }
+  .quick-lbl { font-size: 0.7rem; color: #9aabb0; white-space: nowrap; }
+  .quick-input { width: 70px; padding: 3px 6px; border: 1px solid #c8d8e8;
+                 border-radius: 4px; font-size: 0.78rem; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 4px; padding: 7px 14px;
+         border-radius: 8px; border: none; cursor: pointer; font-size: 0.82rem;
+         font-weight: 600; transition: opacity .15s; text-decoration: none; }
+  .btn:hover { opacity: .85; }
+  .btn-primary   { background: #1a8a4a; color: white; }
+  .btn-secondary { background: #e8eef5; color: #4a5568; }
+  .btn-danger    { background: #fed7d7; color: #9b2c2c; }
+  .btn-warning   { background: #fef3c7; color: #92400e; }
+  .btn-sm  { padding: 5px 10px; font-size: 0.78rem; }
+  .btn-xs  { padding: 3px 7px; font-size: 0.72rem; }
+
+  /* Form card */
+  .form-card { padding: 0; overflow: hidden; }
+  .form-header { padding: 13px 20px; background: #f0f9f4; border-bottom: 1px solid #c6e8d4;
+                 display: flex; align-items: center; justify-content: space-between;
+                 cursor: pointer; }
+  .form-header h2 { font-size: 0.95rem; font-weight: 700; color: #1a8a4a; }
+  .chevron { color: #1a8a4a; font-size: 0.8rem; transition: transform .2s; }
+  .form-body { padding: 18px 20px; display: none; }
+  .form-grid { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 0.75rem; font-weight: 700; color: #4a5568; text-transform: uppercase; letter-spacing: .3px; }
+  .field input[type=text], .field input[type=number] {
+    border: 1.5px solid #c8d8e8; border-radius: 8px; padding: 8px 11px;
+    font-size: 0.88rem; width: 160px; background: #fafcff; }
+  .field input:focus { outline: none; border-color: #1a8a4a; }
+  .hint { font-size: 0.7rem; color: #9aabb0; }
+  .form-actions { display: flex; gap: 10px; }
+
+  /* Alarm */
+  .alarm-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #4a5568; }
+  .alarm-row input { width: 54px; padding: 4px 7px; border: 1.5px solid #c8d8e8;
+                     border-radius: 6px; font-size: 0.82rem; }
+
+  /* Msg card */
+  .msg-card { padding: 16px 20px; }
+  .msg-card h3 { font-size: 0.9rem; font-weight: 700; color: #2d3748; margin-bottom: 10px; }
+  .msg-textarea { width: 100%; min-height: 130px; border: 1.5px solid #c8d8e8;
+                  border-radius: 8px; padding: 10px 12px; font-size: 0.83rem;
+                  font-family: inherit; resize: vertical; background: #fafcff; }
+  .msg-textarea:focus { outline: none; border-color: #1a8a4a; }
+
+  /* PDF / print header */
+  .print-header { display: none; }
+  .print-only { display: none; }
+
+  /* Cloud */
+  .cloud-card { padding: 14px 20px; }
+  .cloud-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px;
+                  border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+  .cloud-status.ok   { background: #c6f6d5; color: #276749; }
+  .cloud-status.sync { background: #bee3f8; color: #2b6cb0; }
+  .cloud-status.err  { background: #fed7d7; color: #9b2c2c; }
+  .cloud-status.off  { background: #e8eef5; color: #718096; }
+  .cloud-setup { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .cloud-input { border: 1.5px solid #c8d8e8; border-radius: 8px; padding: 6px 10px;
+                 font-size: 0.82rem; width: 200px; }
+
+  /* Legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 20px 14px;
+            border-top: 1px solid #f0f4f8; font-size: 0.74rem; color: #718096; }
+
+  footer { text-align: center; padding: 16px; font-size: 0.72rem; color: #a0aec0; }
+
+  /* Modale TXT */
+  .txt-modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+    z-index: 9999; align-items: center; justify-content: center; padding: 16px;
+  }
+  .txt-modal-overlay.open { display: flex; }
+  .txt-modal {
+    background: white; border-radius: 14px; width: 100%; max-width: 680px;
+    max-height: 90vh; display: flex; flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0,0,0,.25);
+  }
+  .txt-modal-header {
+    padding: 14px 18px; border-bottom: 1px solid #e8eef5;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .txt-modal-header h3 { font-size: 0.95rem; font-weight: 700; color: #2d3748; }
+  .txt-modal-body { padding: 14px 18px; flex: 1; overflow-y: auto; }
+  .txt-modal-body textarea {
+    width: 100%; height: 340px; font-family: 'Courier New', monospace;
+    font-size: 0.75rem; border: 1.5px solid #dde5ef; border-radius: 8px;
+    padding: 10px 12px; resize: none; background: #fafcff; color: #2d3748;
+    line-height: 1.5;
+  }
+  .txt-modal-footer {
+    padding: 12px 18px; border-top: 1px solid #e8eef5;
+    display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;
+  }
+
+  /* PDF print */
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .no-print { display: none !important; }
+
+    body { background: white; font-size: 10pt; color: #000; }
+    header { display: none; }
+    .container { padding: 0; max-width: 100%; }
+    .summary, .alert-banner, .msg-card, .form-card,
+    .cloud-card, .table-header .search-box,
+    .table-header button, footer { display: none !important; }
+
+    .table-card { box-shadow: none; border: none; border-radius: 0; }
+    .table-header { border-bottom: 2pt solid #333; padding: 0 0 6pt 0; }
+    .table-header h2 { font-size: 11pt; font-weight: bold; }
+
+    .tbl-wrap { overflow: visible !important; }
+    table { min-width: unset; width: 100%; font-size: 9pt; table-layout: fixed; }
+
+    thead th {
+      background: #e8f5ee !important; color: #000 !important;
+      font-size: 7.5pt; padding: 5pt 6pt; border-bottom: 1.5pt solid #333;
+      white-space: normal !important; word-break: break-word; hyphens: auto;
+    }
+    table th:nth-child(1), table td:nth-child(1) { width: 22%; }
+    table th:nth-child(2), table td:nth-child(2) { width: 14%; }
+    table th:nth-child(3), table td:nth-child(3) { width: 12%; }
+    table th:nth-child(4), table td:nth-child(4) { width: 10%; }
+    table th:nth-child(5), table td:nth-child(5) { width: 14%; }
+    table th:nth-child(6), table td:nth-child(6) { width: 10%; }
+    table th:nth-child(7), table td:nth-child(7) { width: 18%; word-break: break-word; }
+
+    td { padding: 5pt 6pt; border-bottom: .5pt solid #ccc; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .pill { border: 1pt solid #999; padding: 1pt 5pt; border-radius: 3pt; font-size: 7.5pt; }
+    .pill.ok   { background: #d4f4e3 !important; }
+    .pill.warn { background: #fff0d4 !important; }
+    .pill.crit { background: #fde0e0 !important; }
+
+    .quick-row { display: none !important; }
+    .note-cell { max-width: none; font-size: 8pt; color: #333; white-space: normal; word-break: break-word; }
+    .end-date { display: block; font-size: 7.5pt; color: #555; }
+    .legend { padding: 6pt 0 0; border-top: .5pt solid #ccc; margin-top: 4pt; font-size: 7pt; }
+
+    .print-header {
+      display: block !important; margin-bottom: 14pt;
+      padding-bottom: 10pt; border-bottom: 2pt solid #1a8a4a;
+    }
+    .print-header .ph-title { font-size: 15pt; font-weight: bold; color: #1a8a4a; margin-bottom: 4pt; }
+    .print-header .ph-sub   { font-size: 9pt; color: #555; }
+    .print-header .ph-date  { font-size: 8pt; color: #777; margin-top: 6pt; }
+
+    .print-only { display: inline !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="no-print">
+  <div>
+    <div style="font-size:1.1rem;font-weight:700;">🥗 Gestione Alimentazione</div>
+    <div class="subtitle">Scorte · Consumo giornaliero · Autonomia</div>
+  </div>
+  <div class="header-right">
+    Aggiornato: <span id="last-update">—</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Print header -->
+  <div class="print-header" id="print-header">
+    <div class="ph-title">Alimentazione — Riepilogo Scorte</div>
+    <div class="ph-sub" id="ph-sub-text"></div>
+    <div style="font-size:8.5pt;color:#444;margin-top:5pt;display:flex;gap:28pt;flex-wrap:wrap;">
+      <span><strong>Fornitore:</strong> LGR Ufficio Servizio NED &nbsp;·&nbsp; ☎ +39 051 0338691</span>
+      <span><strong>Medico Nutrizionista:</strong> Dott.ssa MARCELLO Maria Caterina</span>
+    </div>
+    <div class="ph-date" id="ph-date-text"></div>
+  </div>
+
+  <!-- Riferimenti -->
+  <div class="card no-print" style="padding:12px 20px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;font-size:0.82rem;color:#4a5568;border-left:4px solid #1a8a4a;">
+    <span>📦 <strong>Fornitore:</strong> LGR Ufficio Servizio NED &nbsp;
+      <a href="tel:+390510338691" style="color:#1a8a4a;font-weight:700;">+39 051 0338691</a>
+    </span>
+    <span>👩‍⚕️ <strong>Medico Nutrizionista:</strong> Dott.ssa MARCELLO Maria Caterina</span>
+  </div>
+
+  <!-- Riepilogo -->
+  <div class="summary no-print">
+    <div class="sum-card card info">
+      <div class="num" id="cnt-total">0</div>
+      <div class="lbl">Articoli</div>
+    </div>
+    <div class="sum-card card ok">
+      <div class="num" id="cnt-ok">0</div>
+      <div class="lbl">Scorta OK</div>
+    </div>
+    <div class="sum-card card warn">
+      <div class="num" id="cnt-warn">0</div>
+      <div class="lbl">Attenzione</div>
+    </div>
+    <div class="sum-card card crit">
+      <div class="num" id="cnt-crit">0</div>
+      <div class="lbl">Critico</div>
+    </div>
+  </div>
+
+  <!-- Banner alert -->
+  <div class="alert-banner" id="alert-banner">
+    <div class="banner-title">⚠️ Attenzione — Richiesta rifornimento per:</div>
+    <div id="alert-list"></div>
+  </div>
+
+  <!-- Messaggio richiesta rifornimento -->
+  <div class="card msg-card no-print" id="msg-section" style="display:none;">
+    <h3>📋 Messaggio — Richiesta Rifornimento</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;">
+      <select id="msg-filter" style="border:1.5px solid #c8d8e8;border-radius:7px;padding:5px 9px;font-size:0.82rem;">
+        <option value="low">Solo articoli in esaurimento</option>
+        <option value="all">Tutti gli articoli</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="buildMessage()">🔄 Genera</button>
+      <button class="btn btn-secondary btn-sm"
+        style="background:#7c3aed;border-color:#7c3aed;color:white;white-space:nowrap;"
+        onclick="copyMessage()">📋 Copia</button>
+    </div>
+    <textarea id="msg-text" class="msg-textarea" readonly></textarea>
+  </div>
+
+  <!-- Soglia allarme -->
+  <div class="card no-print" style="padding:14px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+    <div class="alarm-row">
+      <span>⚠️ Avvisa quando l'autonomia scende sotto</span>
+      <input type="number" id="alarm-input" min="1" max="90" value="10"
+        onchange="setAlarm(this.value)" />
+      <span id="alarm-label">≤ 10 gg</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-secondary btn-sm" onclick="exportTXT()">📄 Esporta TXT</button>
+      <button class="btn btn-secondary btn-sm no-print" onclick="window.print()">🖨️ Stampa / PDF</button>
+    </div>
+  </div>
+
+  <!-- Cloud sync -->
+  <div class="card cloud-card no-print">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span style="font-weight:700;font-size:0.88rem;">☁️ Sincronizzazione Cloud</span>
+      <span id="cloud-status-badge" class="cloud-status off">⚫ Non configurato</span>
+      <button class="btn btn-danger btn-sm" id="btn-disconnect"
+        style="display:none;" onclick="disconnectCloud()">✖ Disconnetti</button>
+      <button class="btn btn-secondary btn-sm" id="btn-genlink"
+        style="display:none;" onclick="genConfigLink()">🔗 Genera link</button>
+    </div>
+    <div class="cloud-setup" id="cloud-setup-body">
+      <input class="cloud-input" id="fb-code" placeholder="Codice personale…"/>
+      <button class="btn btn-primary btn-sm" onclick="saveCloudConfig()">Connetti al Cloud</button>
+    </div>
+  </div>
+
+  <!-- Form aggiungi -->
+  <div class="card form-card no-print">
+    <div class="form-header" onclick="toggleForm()">
+      <h2>➕ Aggiungi articolo</h2>
+      <span class="chevron" id="chevron">▼</span>
+    </div>
+    <div class="form-body" id="form-body">
+      <div class="form-grid">
+        <div class="field">
+          <label>Nome articolo</label>
+          <input type="text" id="f-name" placeholder="es. Compleat" />
+        </div>
+        <div class="field">
+          <label>Unità disponibili</label>
+          <input type="number" id="f-qty" min="0" step="1" placeholder="es. 30" />
+          <div class="hint">unità totali in casa oggi</div>
+        </div>
+        <div class="field">
+          <label>Consumo / die</label>
+          <input type="number" id="f-dose" min="0.01" step="0.5" placeholder="es. 3" />
+          <div class="hint">unità consumate al giorno</div>
+        </div>
+        <div class="field">
+          <label>Note</label>
+          <input type="text" id="f-note" placeholder="es. 500 ml ciascuna" style="width:200px;"/>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="addItem()">Aggiungi</button>
+        <button class="btn btn-secondary" onclick="clearForm()">Cancella</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabella principale -->
+  <div class="table-card">
+    <div class="table-header">
+      <h2>🥗 Scorte alimentazione &nbsp;<span style="font-weight:400;font-size:0.8rem;color:#8a9ab0;" id="last-update-inline"></span></h2>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <input class="search-box no-print" type="search" id="search-box"
+          placeholder="🔍 Cerca…" oninput="render()"/>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-sort="name"   onclick="setSort('name')"   title="Ordina per nome">Articolo</th>
+            <th class="sortable" data-sort="qty"    onclick="setSort('qty')"    title="Ordina per disponibilità">Disponibile</th>
+            <th class="sortable" data-sort="dose"   onclick="setSort('dose')"   title="Ordina per consumo">Consumo / die</th>
+            <th class="sortable" data-sort="days"   onclick="setSort('days')"   title="Ordina per autonomia">Autonomia</th>
+            <th class="sortable" data-sort="enddate" onclick="setSort('enddate')" title="Ordina per data fine scorta">Fine scorta</th>
+            <th class="sortable" data-sort="status" onclick="setSort('status')" title="Ordina per stato">Stato</th>
+            <th>Note</th>
+            <th class="no-print">Azioni</th>
+          </tr>
+        </thead>
+        <tbody id="item-table">
+          <tr id="empty-row" style="display:none;">
+            <td colspan="8" style="text-align:center;color:#a0aec0;padding:24px;">
+              Nessun articolo trovato.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Legenda -->
+    <div class="legend">
+      <span><span class="pill ok">🟢 OK</span> Scorta sufficiente</span>
+      <span><span class="pill warn">🟡 Attenzione</span> Scorta in esaurimento</span>
+      <span><span class="pill crit">🔴 Critico</span> Scorta critica (&lt; 3 gg)</span>
+    </div>
+  </div>
+
+  <footer class="no-print">Gestione Alimentazione · dati locali + cloud · <span id="footer-update"></span></footer>
+</div>
+
+<!-- Modale TXT (mobile) -->
+<div class="txt-modal-overlay" id="txt-modal-overlay" onclick="if(event.target===this)closeTxtModal()">
+  <div class="txt-modal">
+    <div class="txt-modal-header">
+      <h3>📄 Alimentazione — Testo</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeTxtModal()">✖ Chiudi</button>
+    </div>
+    <div class="txt-modal-body">
+      <textarea id="txt-modal-content" readonly></textarea>
+    </div>
+    <div class="txt-modal-footer">
+      <button class="btn btn-secondary" onclick="copyTxtModal()">📋 Copia tutto</button>
+      <button class="btn btn-primary" onclick="shareTxtModal()">📤 Condividi</button>
+      <button class="btn btn-secondary" onclick="closeTxtModal()">✖ Chiudi</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+/* ================================================
+   COSTANTI E STORAGE
+   ================================================ */
+const STORAGE_KEY = 'alimentazione_items_v1';
+const ALARM_KEY   = 'alimentazione_alarm_v1';
+const FB_CFG_KEY  = 'farmaci_fb_cfg_v1'; // stessa chiave di farmaci.html per usare lo stesso codice
+
+let items = [];
+let alarmDays = 10;
+
+let sortCol = null;
+let sortDir = 1;
+
+function setSort(col) {
+  if (sortCol === col) {
+    if (sortDir === 1) sortDir = -1;
+    else { sortCol = null; sortDir = 1; }
+  } else { sortCol = col; sortDir = 1; }
+  render();
+}
+
+function _sortItems(arr) {
+  if (!sortCol) return arr;
+  return [...arr].sort((a, b) => {
+    let va, vb;
+    switch (sortCol) {
+      case 'name':
+        va = a.name.toLowerCase(); vb = b.name.toLowerCase();
+        return va < vb ? -sortDir : va > vb ? sortDir : 0;
+      case 'qty':
+        return (a.qty - b.qty) * sortDir;
+      case 'dose':
+        return (a.dose - b.dose) * sortDir;
+      case 'days': {
+        const da = isFinite(getDays(a)) ? getDays(a) : Infinity;
+        const db = isFinite(getDays(b)) ? getDays(b) : Infinity;
+        return (da - db) * sortDir;
+      }
+      case 'enddate': {
+        const da = isFinite(getDays(a)) ? getDays(a) : 99999;
+        const db = isFinite(getDays(b)) ? getDays(b) : 99999;
+        return (da - db) * sortDir;
+      }
+      case 'status': {
+        const order = { crit: 0, warn: 1, ok: 2 };
+        va = order[statusOf(getDays(a))]; vb = order[statusOf(getDays(b))];
+        return (va - vb) * sortDir;
+      }
+      default: return 0;
+    }
+  });
+}
+
+function _updateSortHeaders() {
+  document.querySelectorAll('thead th.sortable').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (th.dataset.sort === sortCol)
+      th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+  });
+}
+
+/* ================================================
+   DATI DI DEFAULT
+   ================================================ */
+const DEFAULT_ITEMS = [
+  { name: 'Compleat',                qty: 0, dose: 3,   note: '500 ml/bottiglia · 3/die',          refDate: null },
+  { name: 'IsoSource Energy Fibre',  qty: 0, dose: 2,   note: '500 ml/bottiglia · 2/die',          refDate: null },
+  { name: 'Sacche',                  qty: 0, dose: 1,   note: '1 al giorno',                        refDate: null },
+  { name: 'Siringhe 60 ML enfit',    qty: 0, dose: 4,   note: 'per flush e somministrazione farmaci', refDate: null },
+];
+
+/* ================================================
+   STORAGE
+   ================================================ */
+function _saveCore() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch(e) {}
+  updateTimestamp();
+}
+function save() { _saveCore(); _cloudWrite(); }
+function saveAlarm() {
+  try { localStorage.setItem(ALARM_KEY, String(alarmDays)); } catch(e) {}
+}
+
+/* ================================================
+   SCALATURA AUTOMATICA
+   ================================================ */
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function daysBetween(a, b) {
+  return Math.floor((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000);
+}
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + 'T12:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const [y, m, g] = iso.split('-');
+  return `${g}/${m}/${y}`;
+}
+
+function applyAutoScale() {
+  const today = todayStr();
+  let changed = false;
+  items.forEach(d => {
+    if (!d.refDate) { d.refDate = today; changed = true; return; }
+    if (d.refDate === today) return;
+    const days = daysBetween(d.refDate, today);
+    if (days > 0 && d.dose > 0) {
+      d.qty = Math.max(0, Math.round((d.qty - days * d.dose) * 100) / 100);
+      changed = true;
+    }
+    d.refDate = today;
+    changed = true;
+  });
+  if (changed) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch(e) {}
+  }
+}
+
+function load() {
+  try {
+    const a = localStorage.getItem(ALARM_KEY);
+    if (a !== null) alarmDays = Math.max(1, parseInt(a, 10) || 10);
+  } catch(e) {}
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { items = JSON.parse(raw); }
+    else { items = DEFAULT_ITEMS.map(d => ({ ...d, refDate: todayStr() })); save(); }
+  } catch(e) {
+    items = DEFAULT_ITEMS.map(d => ({ ...d, refDate: todayStr() })); save();
+  }
+  applyAutoScale();
+}
+
+/* ================================================
+   CALCOLI
+   ================================================ */
+function getDays(d) {
+  if (!d.dose || d.dose <= 0) return Infinity;
+  return Math.floor(d.qty / d.dose);
+}
+function statusOf(days) {
+  if (!isFinite(days) || days > alarmDays) return 'ok';
+  if (days <= 3) return 'crit';
+  return 'warn';
+}
+function endDateStr(d) {
+  const days = getDays(d);
+  if (!isFinite(days)) return null;
+  return addDays(todayStr(), days);
+}
+
+const STATUS_LABEL = {
+  ok:   '🟢 OK',
+  warn: '🟡 Attenzione',
+  crit: '🔴 Scorta critica',
+};
+
+/* ================================================
+   RENDER
+   ================================================ */
+function render() {
+  const query  = (document.getElementById('search-box').value || '').toLowerCase();
+  const tbody  = document.getElementById('item-table');
+  const empty  = document.getElementById('empty-row');
+
+  const visible = _sortItems(
+    items.map((d, i) => ({ ...d, _idx: i }))
+         .filter(d => !query || d.name.toLowerCase().includes(query) ||
+                 (d.note || '').toLowerCase().includes(query))
+  );
+
+  Array.from(tbody.querySelectorAll('tr[data-id]')).forEach(r => r.remove());
+
+  if (visible.length === 0) {
+    empty.style.display = '';
+    updateSummary();
+    return;
+  }
+  empty.style.display = 'none';
+
+  visible.forEach(d => {
+    const i    = d._idx;
+    const days = getDays(d);
+    const st   = statusOf(days);
+    const dDisp = isFinite(days) ? days : '∞';
+    const dCls  = 'days-' + st;
+    const endD  = endDateStr(d);
+    const endDisp = endD ? fmtDate(endD) : '—';
+
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-id', i);
+    tr.innerHTML = `
+      <td><span class="item-name">${esc(d.name)}</span></td>
+      <td>
+        <div class="qty-wrap">
+          <span class="qty-val">${d.qty} unità</span>
+          <div class="quick-row no-print">
+            <span class="quick-lbl">Aggiungi:</span>
+            <input class="quick-input" type="number" min="1" step="1"
+              id="qi-${i}" placeholder="unità"
+              onkeydown="if(event.key==='Enter')addQty(${i},this.value,this)"/>
+            <button class="btn btn-secondary btn-xs"
+              onclick="addQty(${i},document.getElementById('qi-${i}').value,document.getElementById('qi-${i}'))">✓</button>
+          </div>
+        </div>
+      </td>
+      <td>${d.dose} / die</td>
+      <td><span class="${dCls}">${dDisp}</span>${isFinite(days) ? ' gg' : ''}</td>
+      <td><span class="end-date">${endDisp}</span></td>
+      <td><span class="pill ${st}">${STATUS_LABEL[st]}</span></td>
+      <td class="note-cell">${esc(d.note || '')}</td>
+      <td class="no-print" style="white-space:nowrap;">
+        <button class="btn btn-secondary btn-sm" onclick="editRow(${i})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRow(${i})" style="margin-left:4px">🗑️</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  updateSummary();
+  _updateSortHeaders();
+}
+
+/* ================================================
+   CRUD
+   ================================================ */
+function addItem() {
+  const name = document.getElementById('f-name').value.trim();
+  const qty  = parseFloat(document.getElementById('f-qty').value)  || 0;
+  const dose = parseFloat(document.getElementById('f-dose').value);
+  const note = document.getElementById('f-note').value.trim();
+
+  if (!name)                    { alert('Inserisci il nome dell\'articolo.'); return; }
+  if (isNaN(dose) || dose <= 0) { alert('Consumo/die non valido (> 0).'); return; }
+
+  items.push({ name, qty, dose, note, refDate: todayStr() });
+  save();
+  clearForm();
+  render();
+}
+
+function clearForm() {
+  ['f-name','f-qty','f-dose','f-note'].forEach(id =>
+    document.getElementById(id).value = '');
+  document.getElementById('f-name').focus();
+}
+
+function deleteRow(i) {
+  if (!confirm(`Eliminare "${items[i].name}"?`)) return;
+  items.splice(i, 1);
+  save();
+  render();
+}
+
+function addQty(i, val, inputEl) {
+  const v = parseFloat(val);
+  if (isNaN(v) || v <= 0) { alert('Inserisci un numero valido (> 0).'); return; }
+  items[i].qty = Math.round((items[i].qty + v) * 100) / 100;
+  items[i].refDate = todayStr();
+  save();
+  if (inputEl) inputEl.value = '';
+  render();
+}
+
+function editRow(i) {
+  const d = items[i];
+  const tr = document.querySelector(`tr[data-id="${i}"]`);
+  if (!tr) return;
+  tr.classList.add('editing');
+  tr.innerHTML = `
+    <td colspan="8" style="padding:12px 16px;background:#eef8f1;border-left:3px solid #1a8a4a;">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
+        <div>
+          <div style="font-size:0.71rem;color:#667;margin-bottom:3px;">Nome articolo</div>
+          <input type="text" id="e-name" value="${esc(d.name)}"
+            style="width:180px;border:1.5px solid #7ec89a;border-radius:6px;padding:6px 8px;font-size:0.87rem;"/>
+        </div>
+        <div>
+          <div style="font-size:0.71rem;color:#667;margin-bottom:3px;">Disponibile</div>
+          <input type="number" id="e-qty" value="${d.qty}" min="0" step="1"
+            style="width:80px;border:1.5px solid #7ec89a;border-radius:6px;padding:6px 8px;font-size:0.87rem;"/>
+        </div>
+        <div>
+          <div style="font-size:0.71rem;color:#667;margin-bottom:3px;">Consumo/die</div>
+          <input type="number" id="e-dose" value="${d.dose}" min="0.01" step="0.5"
+            style="width:72px;border:1.5px solid #7ec89a;border-radius:6px;padding:6px 8px;font-size:0.87rem;"/>
+        </div>
+        <div>
+          <div style="font-size:0.71rem;color:#667;margin-bottom:3px;">Note</div>
+          <input type="text" id="e-note" value="${esc(d.note||'')}"
+            style="width:200px;border:1.5px solid #7ec89a;border-radius:6px;padding:6px 8px;font-size:0.87rem;"/>
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-end;padding-bottom:1px;">
+          <button class="btn btn-primary btn-sm" onclick="saveRow(${i})">💾 Salva</button>
+          <button class="btn btn-danger btn-sm"  onclick="deleteRow(${i})">🗑️ Elimina</button>
+          <button class="btn btn-secondary btn-sm" onclick="render()">✖ Annulla</button>
+        </div>
+      </div>
+    </td>`;
+  document.getElementById('e-name').focus();
+}
+
+function saveRow(i) {
+  const name = document.getElementById('e-name').value.trim();
+  const qty  = parseFloat(document.getElementById('e-qty').value)  || 0;
+  const dose = parseFloat(document.getElementById('e-dose').value);
+  const note = document.getElementById('e-note').value.trim();
+
+  if (!name)                    { alert('Il nome non può essere vuoto.'); return; }
+  if (isNaN(dose) || dose <= 0) { alert('Consumo/die non valido.'); return; }
+
+  items[i] = { name, qty, dose, note, refDate: items[i].refDate || todayStr() };
+  save();
+  render();
+}
+
+/* ================================================
+   SUMMARY & ALERT
+   ================================================ */
+function updateSummary() {
+  let ok = 0, warn = 0, crit = 0;
+  const alerts = [];
+  items.forEach(d => {
+    const days = getDays(d);
+    const st   = statusOf(days);
+    if      (st === 'ok')   ok++;
+    else if (st === 'warn') { warn++; alerts.push({ ...d, days, st }); }
+    else                    { crit++; alerts.push({ ...d, days, st }); }
+  });
+
+  document.getElementById('cnt-total').textContent = items.length;
+  document.getElementById('cnt-ok').textContent    = ok;
+  document.getElementById('cnt-warn').textContent  = warn;
+  document.getElementById('cnt-crit').textContent  = crit;
+
+  const banner = document.getElementById('alert-banner');
+  if (alerts.length > 0) {
+    banner.style.display = 'block';
+    const lines = alerts.map(a => {
+      const icon = a.st === 'crit' ? '🔴' : '🟡';
+      const dStr = isFinite(a.days) ? `${a.days} gg rimasti` : '∞ gg';
+      const end  = endDateStr(a);
+      const eStr = end ? ` · fine scorta: ${fmtDate(end)}` : '';
+      return `${icon} <strong>${esc(a.name)}</strong> &nbsp;— ${dStr}${eStr}`;
+    });
+    document.getElementById('alert-list').innerHTML = lines.join('<br>');
+  } else {
+    banner.style.display = 'none';
+  }
+  toggleMsgSection(alerts.length > 0);
+  buildMessage();
+}
+
+function toggleMsgSection(show) {
+  document.getElementById('msg-section').style.display = show ? '' : 'none';
+}
+
+/* ================================================
+   MESSAGGIO RIFORNIMENTO
+   ================================================ */
+function buildMessage() {
+  const filter = document.getElementById('msg-filter')?.value || 'low';
+  const today  = new Date().toLocaleDateString('it-IT', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  const subset = filter === 'all'
+    ? items
+    : items.filter(d => statusOf(getDays(d)) !== 'ok');
+
+  if (subset.length === 0) {
+    const msgEl = document.getElementById('msg-text');
+    if (msgEl) msgEl.value = 'Al momento le scorte sono sufficienti per tutti gli articoli.';
+    return;
+  }
+
+  const lines = subset.map(d => {
+    const days = getDays(d);
+    const end  = endDateStr(d);
+    let dStr = '';
+    if (!isFinite(days))  dStr = '';
+    else if (days === 0)  dStr = '  (ESAURITO)';
+    else                  dStr = `  (${days} gg rimasti — fine scorta: ${end ? fmtDate(end) : '?'})`;
+    return `  • ${d.name}${dStr}`;
+  }).join('\n');
+
+  const intro = filter === 'all'
+    ? 'si richiede il rifornimento del materiale per la nutrizione enterale in dotazione:'
+    : 'si richiede urgentemente il rifornimento dei seguenti articoli in esaurimento:';
+
+  const text =
+`Gentile referente LGR Ufficio Servizio NED,
+
+${intro}
+
+${lines}
+
+Medico Nutrizionista di riferimento: Dott.ssa MARCELLO Maria Caterina
+
+Si ringrazia per la disponibilità e la tempestività.
+
+Alessandro PREVIATI
+Data: ${today}
+Contatto fornitore: +39 051 0338691`;
+
+  const msgEl = document.getElementById('msg-text');
+  if (msgEl) msgEl.value = text;
+}
+
+function copyMessage() {
+  const t = document.getElementById('msg-text');
+  if (!t) return;
+  t.select();
+  document.execCommand('copy');
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✅ Copiato!';
+  setTimeout(() => btn.textContent = orig, 1800);
+}
+
+/* ================================================
+   EXPORT TXT
+   ================================================ */
+function exportTXT() {
+  const LINE  = '─'.repeat(80);
+  const DLINE = '═'.repeat(80);
+  const today = new Date().toLocaleDateString('it-IT', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const pad  = (s, n) => String(s).padEnd(n);
+  const padL = (s, n) => String(s).padStart(n);
+
+  let txt = '';
+  txt += DLINE + '\n';
+  txt += '  ALIMENTAZIONE — RIEPILOGO SCORTE\n';
+  txt += `  ${today}\n`;
+  txt += DLINE + '\n\n';
+
+  txt += pad('ARTICOLO', 30) + pad('DISPON.', 10) + pad('CONS/DIE', 10) +
+         padL('GG', 5) + '  ' + pad('FINE SCORTA', 14) + pad('STATO', 20) + 'NOTE\n';
+  txt += LINE + '\n';
+
+  items.forEach(d => {
+    const days  = getDays(d);
+    const dDisp = isFinite(days) ? String(days) : '∞';
+    const stTxt = statusOf(days) === 'ok'   ? 'OK'
+                : statusOf(days) === 'warn' ? 'Attenzione'
+                :                             '⚠ CRITICO';
+    const end   = endDateStr(d);
+    txt += pad(d.name, 30)
+         + pad(d.qty + ' u.', 10)
+         + pad(d.dose + '/die', 10)
+         + padL(dDisp, 5) + '  '
+         + pad(end ? fmtDate(end) : '—', 14)
+         + pad(stTxt, 20)
+         + (d.note || '') + '\n';
+  });
+
+  txt += LINE + '\n\n';
+
+  // Riepilogo
+  let ok = 0, warn = 0, crit = 0;
+  items.forEach(d => {
+    const st = statusOf(getDays(d));
+    if (st === 'ok') ok++; else if (st === 'warn') warn++; else crit++;
+  });
+  txt += `OK: ${ok}   Attenzione: ${warn}   Critici: ${crit}\n\n`;
+
+  // Articoli in esaurimento
+  const allerte = items.filter(d => statusOf(getDays(d)) !== 'ok');
+  if (allerte.length > 0) {
+    txt += DLINE + '\n';
+    txt += '  DA RICHIEDERE AL FORNITORE\n';
+    txt += DLINE + '\n';
+    allerte.forEach(d => {
+      const days    = getDays(d);
+      const end     = endDateStr(d);
+      const dStr    = days === 0 ? 'ESAURITO' : isFinite(days) ? `${days} gg rimasti — fine scorta ${end ? fmtDate(end) : '?'}` : '';
+      const urgente = statusOf(days) === 'crit' ? '  ⚠ URGENTE' : '';
+      txt += `  • ${d.name}  —  ${dStr}${urgente}\n`;
+    });
+    txt += DLINE + '\n';
+  }
+
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    document.getElementById('txt-modal-content').value = txt;
+    document.getElementById('txt-modal-overlay').classList.add('open');
+  } else {
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `alimentazione_${todayStr()}.txt`;
+    a.click();
+  }
+}
+function closeTxtModal() {
+  document.getElementById('txt-modal-overlay').classList.remove('open');
+}
+function copyTxtModal() {
+  const ta = document.getElementById('txt-modal-content');
+  ta.select();
+  document.execCommand('copy');
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✅ Copiato!';
+  setTimeout(() => btn.textContent = orig, 1800);
+}
+async function shareTxtModal() {
+  const txt = document.getElementById('txt-modal-content').value;
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Scorte alimentazione',
+        text: txt,
+      });
+    } catch(e) { if (e.name !== 'AbortError') alert('Condivisione non riuscita.'); }
+  } else {
+    const ta = document.getElementById('txt-modal-content');
+    ta.select();
+    document.execCommand('copy');
+    alert('Condivisione non disponibile su questo browser — testo copiato negli appunti.');
+  }
+}
+
+/* ================================================
+   UI HELPER
+   ================================================ */
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function updateTimestamp() {
+  const n = new Date();
+  const s = n.toLocaleDateString('it-IT') + ' ' +
+            n.toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
+  document.getElementById('last-update').textContent = s;
+  const il = document.getElementById('last-update-inline');
+  if (il) il.textContent = '— ' + s;
+  const fu = document.getElementById('footer-update');
+  if (fu) fu.textContent = s;
+}
+function setAlarm(val) {
+  const v = Math.max(1, parseInt(val, 10) || 10);
+  alarmDays = v;
+  saveAlarm();
+  const lbl = document.getElementById('alarm-label');
+  if (lbl) lbl.textContent = `≤ ${alarmDays} gg`;
+  render();
+}
+function toggleForm() {
+  const body = document.getElementById('form-body');
+  const chev = document.getElementById('chevron');
+  const open = body.style.display === 'none' || body.style.display === '';
+  body.style.display = open ? 'block' : 'none';
+  chev.textContent   = open ? '▲' : '▼';
+}
+function updatePrintHeader() {
+  document.getElementById('ph-sub-text').textContent =
+    'Alessandro PREVIATI — Nutrizione enterale  ·  Nutrizionista: Dott.ssa MARCELLO Maria Caterina';
+  document.getElementById('ph-date-text').textContent =
+    'Stampato il ' + new Date().toLocaleDateString('it-IT',
+    { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+}
+
+/* ================================================
+   CLOUD SYNC (stessa infrastruttura di farmaci.html)
+   ================================================ */
+const FB_BASE_CFG = {
+  apiKey:    'AIzaSyCj5u6pMaXPJhrkFYLbNPCStbF3taMTU7c',
+  projectId: 'farmaci-ca400',
+};
+let cloudCode      = null;
+let cloudLastWrite = 0;
+let cloudPollId    = null;
+
+function fsUrl(code) {
+  return `https://firestore.googleapis.com/v1/projects/${FB_BASE_CFG.projectId}`
+       + `/databases/(default)/documents/alimentazione/${encodeURIComponent(code)}`
+       + `?key=${FB_BASE_CFG.apiKey}`;
+}
+async function _cloudRead(code) {
+  const res = await fetch(fsUrl(code));
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const doc = await res.json();
+  const str = doc.fields?.payload?.stringValue;
+  return str ? JSON.parse(str) : null;
+}
+async function _cloudWrite() {
+  if (!cloudCode) return;
+  try {
+    cloudLastWrite = Date.now();
+    await fetch(fsUrl(cloudCode), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          payload:  { stringValue: JSON.stringify({ items, alarmDays }) },
+          savedAt:  { stringValue: new Date().toISOString() }
+        }
+      })
+    });
+  } catch(e) { console.warn('Cloud write error:', e); }
+}
+async function _cloudPoll() {
+  if (!cloudCode) return;
+  try {
+    const data = await _cloudRead(cloudCode);
+    if (!data || !Array.isArray(data.items)) return;
+    const savedAt = data.savedAt ? new Date(data.savedAt).getTime() : 0;
+    if (savedAt <= cloudLastWrite + 2000) return;
+    items     = data.items;
+    alarmDays = data.alarmDays || alarmDays;
+    applyAutoScale();
+    _saveCore();
+    render();
+    document.getElementById('alarm-input').value       = alarmDays;
+    document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+    cloudLastWrite = Date.now();
+    setCloudStatus('ok', '✅ Sincronizzato');
+  } catch(e) { /* silenzioso */ }
+}
+function _cloudConnected(code) {
+  setCloudStatus('ok', '✅ Cloud attivo — ' + code);
+  document.getElementById('btn-disconnect').style.display = '';
+  document.getElementById('btn-genlink').style.display    = '';
+  document.getElementById('cloud-setup-body').style.display = 'none';
+  if (cloudPollId) clearInterval(cloudPollId);
+  cloudPollId = setInterval(_cloudPoll, 30000);
+}
+async function initCloud(personalCode) {
+  cloudCode = personalCode.trim();
+  if (!cloudCode) { alert('Inserisci il Codice personale.'); return; }
+  setCloudStatus('sync', '🔄 Connessione…');
+  try {
+    const data = await _cloudRead(cloudCode);
+    if (data && Array.isArray(data.items) && data.items.length > 0) {
+      items     = data.items;
+      alarmDays = data.alarmDays || alarmDays;
+      applyAutoScale();
+      _saveCore();
+      await _cloudWrite();
+      render();
+      document.getElementById('alarm-input').value       = alarmDays;
+      document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+    } else {
+      await _cloudWrite();
+    }
+    cloudLastWrite = Date.now();
+    localStorage.setItem(FB_CFG_KEY, JSON.stringify({ personalCode: cloudCode }));
+    _cloudConnected(cloudCode);
+  } catch(e) {
+    setCloudStatus('err', '⛔ Errore: ' + e.message);
+    console.error('Cloud init error:', e);
+  }
+}
+function saveCloudConfig() {
+  const code = document.getElementById('fb-code').value.trim();
+  if (!code) { alert('Inserisci il Codice personale.'); return; }
+  initCloud(code);
+}
+function disconnectCloud() {
+  if (cloudPollId) { clearInterval(cloudPollId); cloudPollId = null; }
+  cloudCode = null;
+  try { localStorage.removeItem(FB_CFG_KEY); } catch(e) {}
+  setCloudStatus('off', '⚫ Non configurato');
+  document.getElementById('btn-disconnect').style.display = 'none';
+  document.getElementById('btn-genlink').style.display    = 'none';
+  document.getElementById('cloud-setup-body').style.display = '';
+}
+function setCloudStatus(type, msg) {
+  const el = document.getElementById('cloud-status-badge');
+  el.className = 'cloud-status ' + type;
+  el.textContent = msg;
+}
+function genConfigLink() {
+  if (!cloudCode) return;
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify({ personalCode: cloudCode }))));
+  const url = location.href.split('#')[0] + '#fbcfg=' + encoded;
+  navigator.clipboard.writeText(url).then(() => alert('Link copiato! Incollalo su un altro dispositivo per configurare il cloud automaticamente.'))
+    .catch(() => prompt('Copia questo link:', url));
+}
+function autoConnectFromHash() {
+  const hash = location.hash;
+  if (!hash.startsWith('#fbcfg=')) return false;
+  try {
+    const cfg = JSON.parse(decodeURIComponent(escape(atob(hash.slice(7)))));
+    if (cfg.personalCode) {
+      document.getElementById('fb-code').value = cfg.personalCode;
+      initCloud(cfg.personalCode);
+      history.replaceState(null, '', location.pathname);
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+function autoConnectFromStorage() {
+  try {
+    const raw = localStorage.getItem(FB_CFG_KEY);
+    if (!raw) return false;
+    const cfg = JSON.parse(raw);
+    if (cfg.personalCode) {
+      document.getElementById('fb-code').value = cfg.personalCode;
+      initCloud(cfg.personalCode);
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+/* ================================================
+   AVVIO
+   ================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  load();
+  render();
+  updatePrintHeader();
+  buildMessage();
+  document.getElementById('alarm-input').value = alarmDays;
+
+  if (!autoConnectFromHash()) autoConnectFromStorage();
+});
+</script>
+</body>
+</html>

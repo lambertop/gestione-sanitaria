@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presidi Medico-Chirurgici</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+           background: #f2eff8; min-height: 100vh; color: #2d3748; }
+
+    header { background: linear-gradient(135deg, #5a2d82, #3a1a5c); color: white;
+             padding: 20px 24px; box-shadow: 0 2px 8px rgba(0,0,0,.2);
+             padding-top: max(20px, calc(env(safe-area-inset-top) + 12px)); }
+    header .icon { font-size: 2rem; }
+    header h1   { font-size: 1.5rem; font-weight: 700; letter-spacing: .4px; }
+    header p    { font-size: .85rem; opacity: .85; margin-top: 2px; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+
+    /* ---- Card base ---- */
+    .card { background: white; border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.07); margin-bottom: 20px; overflow: hidden; }
+
+    /* ---- Section headers ---- */
+    .sec-hdr { display: flex; align-items: center; justify-content: space-between;
+               padding: 13px 18px; cursor: pointer; user-select: none; color: white; }
+    .sec-hdr-left { display: flex; align-items: center; gap: 10px; }
+    .sec-hdr h2   { font-size: .95rem; font-weight: 700; }
+    .sec-hdr .sec-icon { font-size: 1.3rem; }
+    .sec-hdr .toggle-btn { font-size: .75rem; opacity: .8; background: rgba(255,255,255,.18);
+                           border: none; color: white; border-radius: 6px;
+                           padding: 4px 10px; cursor: pointer; }
+    .sec-medicazione  { background: linear-gradient(135deg, #1a6a5a, #0d4a3d); }
+    .sec-alimentazione{ background: linear-gradient(135deg, #7a5010, #55380a); }
+    .sec-continenza   { background: linear-gradient(135deg, #1a4a8a, #0d2f60); }
+
+    /* ---- Section body ---- */
+    .sec-body { }
+    .sec-body.collapsed { display: none; }
+
+    /* ---- Table ---- */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+    thead th { padding: 9px 12px; text-align: left; font-size: .72rem; font-weight: 700;
+               color: #667; border-bottom: 2px solid #edf0f5; background: #f8fafc;
+               white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid #f0f4f8; transition: background .12s; }
+    tbody tr:hover { background: #faf8ff; }
+    td { padding: 9px 12px; vertical-align: middle; }
+
+    /* ---- Item name ---- */
+    .item-desc { font-weight: 600; }
+    .item-meta { font-size: .73rem; color: #8a9ab0; margin-top: 2px; }
+    .item-uso  { font-size: .72rem; color: #556; margin-top: 2px; font-style: italic; }
+
+    /* ---- Qty ---- */
+    .qty-wrap { display: flex; flex-direction: column; gap: 3px; }
+    .qty-val  { font-weight: 600; }
+    .qty-sub  { font-size: .73rem; color: #8a9ab0; }
+    .quick-row { display: flex; gap: 4px; align-items: center; margin-top: 4px; }
+    .quick-lbl   { font-size: .7rem; color: #8a9ab0; }
+    .quick-input { width: 60px; padding: 3px 6px; border: 1.5px solid #cdd8e8;
+                   border-radius: 6px; font-size: .76rem; }
+
+    /* ---- Days ---- */
+    .days-num  { font-weight: 700; font-size: .92rem; }
+    .days-ok   { color: #1a7a40; }
+    .days-warn { color: #c47000; }
+    .days-crit { color: #c00000; }
+
+    /* ---- Pills ---- */
+    .pill { display: inline-block; padding: 2px 10px; border-radius: 20px;
+            font-size: .73rem; font-weight: 700; border: 1.5px solid; }
+    .pill.ok   { background: #d4f4e3; color: #1a5e38; border-color: #7ed4aa; }
+    .pill.warn { background: #fff0d4; color: #7a4500; border-color: #ffc070; }
+    .pill.crit { background: #ffe0e0; color: #8b0000; border-color: #f09090; }
+
+    /* ---- Date ---- */
+    .date-val { font-size: .78rem; color: #556; }
+
+    /* ---- Buttons ---- */
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px;
+           border-radius: 8px; border: 1.5px solid transparent; font-size: .82rem;
+           font-weight: 600; cursor: pointer; transition: all .15s; text-decoration: none; }
+    .btn-primary   { background: #5a2d82; color: white; border-color: #5a2d82; }
+    .btn-primary:hover { background: #4a2070; }
+    .btn-secondary { background: white; color: #5a2d82; border-color: #c8b0e0; }
+    .btn-secondary:hover { background: #f5f0ff; }
+    .btn-danger    { background: white; color: #c0392b; border-color: #f0a0a0; }
+    .btn-danger:hover { background: #fff0f0; }
+    .btn-sm  { padding: 4px 10px; font-size: .76rem; }
+    .btn-xs  { padding: 2px 7px;  font-size: .72rem; }
+
+    /* ---- Section footer ---- */
+    .sec-foot { padding: 10px 16px; border-top: 1px solid #f0f4f8;
+                display: flex; justify-content: space-between; align-items: center;
+                flex-wrap: wrap; gap: 8px; }
+    .sec-count { font-size: .76rem; color: #8a9ab0; }
+
+    /* ---- Empty state ---- */
+    .empty-st { padding: 28px; text-align: center; color: #8a9ab0; }
+    .e-icon   { font-size: 2rem; margin-bottom: 8px; }
+    .empty-st p { font-size: .84rem; }
+
+    /* ---- Summary ---- */
+    .summary-inner { padding: 16px 20px; }
+    .sum-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sum-header h3 { font-size: .95rem; font-weight: 700; color: #2d3748; }
+    .sum-pills  { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .sum-pill   { padding: 3px 12px; border-radius: 20px; font-size: .76rem; font-weight: 700; }
+    .sum-ok   { background: #d4f4e3; color: #1a5e38; }
+    .sum-warn { background: #fff0d4; color: #7a4500; }
+    .sum-crit { background: #ffe0e0; color: #8b0000; }
+    .alert-list { display: flex; flex-direction: column; gap: 6px; }
+    .alert-item { display: flex; align-items: center; gap: 8px; font-size: .82rem; flex-wrap: wrap; }
+
+    /* ---- Export card ---- */
+    .export-inner { padding: 16px 20px; }
+    .export-inner h3 { font-size: .95rem; font-weight: 700; margin-bottom: 12px; }
+    .export-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* ---- Patient strip ---- */
+    .ph-strip { background: white; border-radius: 12px; padding: 12px 18px;
+                display: flex; flex-wrap: wrap; gap: 12px 28px; margin-bottom: 12px;
+                box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+    .ph-field { display: flex; flex-direction: column; gap: 2px; }
+    .ph-lbl   { font-size: .7rem; font-weight: 600; color: #8a9ab0; text-transform: uppercase; }
+    .ph-val   { font-size: .86rem; font-weight: 600; color: #2d3748; }
+
+    /* ---- Assistance strip ---- */
+    .as-strip { background: #f0f7ff; border-radius: 12px; padding: 10px 18px;
+                display: flex; flex-wrap: wrap; gap: 8px 28px; margin-bottom: 20px;
+                box-shadow: 0 1px 6px rgba(0,0,0,.06);
+                border-left: 4px solid #5a2d82; }
+    .as-title { font-size: .72rem; font-weight: 700; color: #5a2d82; text-transform: uppercase;
+                width: 100%; margin-bottom: 2px; letter-spacing: .04em; }
+    .as-field { display: flex; flex-direction: column; gap: 2px; }
+    .as-lbl   { font-size: .65rem; font-weight: 600; color: #8a9ab0; text-transform: uppercase; }
+    .as-val   { font-size: .84rem; font-weight: 600; color: #2d3748; }
+    .as-val a { color: #5a2d82; text-decoration: none; }
+    .as-val a:hover { text-decoration: underline; }
+
+    /* ---- Sync strip ---- */
+    .sync-strip { background: white; border-radius: 12px; padding: 10px 18px;
+                  margin-bottom: 18px; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+    .sync-row   { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .cloud-status { padding: 3px 10px; border-radius: 20px; font-size: .76rem; font-weight: 700; }
+    .cloud-status.ok   { background: #d4f4e3; color: #1a5e38; }
+    .cloud-status.err  { background: #ffe0e0; color: #8b0000; }
+    .cloud-status.sync { background: #fff0d4; color: #7a4500; }
+    .cloud-status.off  { background: #f0f4f8; color: #667; }
+    .cloud-setup-body  { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+    .cloud-setup-body input { padding: 6px 10px; border: 1.5px solid #cdd8e8; border-radius: 8px; font-size: .82rem; width: 200px; }
+    .cfg-link-box { margin-top: 8px; display: none; }
+    .cfg-link-box input { padding: 5px 8px; border: 1px solid #cdd8e8; border-radius: 6px; font-size: .75rem; width: 320px; max-width: 100%; }
+    .sync-ts { font-size: .72rem; color: #8a9ab0; }
+
+    /* ---- Alarm ---- */
+    .alarm-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .alarm-row label { font-size: .78rem; color: #556; font-weight: 600; }
+    .alarm-row input[type=range] { width: 100px; accent-color: #5a2d82; }
+    .alarm-row span { font-size: .78rem; font-weight: 700; color: #5a2d82; min-width: 40px; }
+
+    /* ---- Modal ---- */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.52);
+                     z-index: 9999; align-items: center; justify-content: center;
+                     padding: 16px;
+                     padding-top: max(24px, calc(env(safe-area-inset-top) + 16px));
+                     overflow-y: auto; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 14px; width: 100%; max-width: 540px;
+             box-shadow: 0 8px 32px rgba(0,0,0,.25); margin: auto; }
+    .modal-hdr { padding: 14px 18px; border-bottom: 1px solid #e8eef5;
+                 display: flex; align-items: center; justify-content: space-between;
+                 background: #5a2d82; border-radius: 14px 14px 0 0; color: white; }
+    .modal-hdr h3 { font-size: .95rem; font-weight: 700; }
+    .modal-body { padding: 20px 18px; max-height: 70vh; overflow-y: auto; }
+    .modal-foot { padding: 12px 18px; border-top: 1px solid #e8eef5;
+                  display: flex; gap: 10px; justify-content: flex-end; }
+    .field { margin-bottom: 13px; }
+    .field label { display: block; font-size: .76rem; font-weight: 600; color: #556; margin-bottom: 4px; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 7px 10px; border: 1.5px solid #cdd8e8;
+      border-radius: 8px; font-size: .86rem; font-family: inherit; }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline: none; border-color: #8a5ac0; }
+    .field textarea { resize: vertical; min-height: 56px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ---- TXT modal ---- */
+    .txt-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+                         z-index: 9999; align-items: center; justify-content: center; padding: 16px; }
+    .txt-modal-overlay.open { display: flex; }
+    .txt-modal { background: white; border-radius: 14px; width: 100%; max-width: 700px;
+                 max-height: 90vh; display: flex; flex-direction: column;
+                 box-shadow: 0 8px 32px rgba(0,0,0,.25); }
+    .txt-modal-hdr { padding: 14px 18px; border-bottom: 1px solid #e8eef5;
+                     display: flex; align-items: center; justify-content: space-between; }
+    .txt-modal-hdr h3 { font-size: .95rem; font-weight: 700; color: #2d3748; }
+    .txt-modal-body { padding: 14px 18px; flex: 1; overflow-y: auto; }
+    .txt-modal-body textarea { width: 100%; height: 340px; font-family: 'Courier New', monospace;
+                               font-size: .74rem; border: 1.5px solid #dde5ef; border-radius: 8px;
+                               padding: 10px 12px; resize: none; background: #fafcff; line-height: 1.5; }
+    .txt-modal-foot { padding: 12px 18px; border-top: 1px solid #e8eef5;
+                      display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+    /* ---- Readonly mode ---- */
+    .readonly-banner { display: none; background: #e8f4fd; border: 1.5px solid #74b9d8;
+                       border-radius: 10px; padding: 9px 16px; margin-bottom: 16px;
+                       font-size: .83rem; color: #1a4a6a; font-weight: 600; text-align: center; }
+    body.readonly-mode .readonly-banner { display: block; }
+    body.readonly-mode .edit-only { display: none !important; }
+
+    /* ---- Checkbox ---- */
+    .cb-cell { width: 36px; text-align: center; padding: 9px 6px 9px 12px !important; }
+    .cb-cell input[type=checkbox] { width: 17px; height: 17px; accent-color: #5a2d82; cursor: pointer; }
+    tbody tr.row-checked { background: #f5f0ff !important; }
+
+    /* ---- Floating request bar ---- */
+    .req-bar { display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+               background: #5a2d82; color: white; border-radius: 40px; padding: 12px 22px;
+               box-shadow: 0 4px 20px rgba(90,45,130,.45); z-index: 8888;
+               align-items: center; gap: 14px; white-space: nowrap;
+               bottom: max(24px, calc(env(safe-area-inset-bottom) + 16px)); }
+    .req-bar.visible { display: flex; }
+    .req-bar-count { font-size: .85rem; font-weight: 700; opacity: .9; }
+    .req-bar-btn { background: white; color: #5a2d82; border: none; border-radius: 24px;
+                  padding: 7px 16px; font-size: .82rem; font-weight: 700; cursor: pointer;
+                  transition: background .15s; }
+    .req-bar-btn:hover { background: #f0e8ff; }
+    .req-bar-clear { background: rgba(255,255,255,.18); color: white; border: none;
+                     border-radius: 24px; padding: 7px 12px; font-size: .78rem;
+                     font-weight: 600; cursor: pointer; }
+
+    /* ---- Footer ---- */
+    footer { text-align: center; margin-top: 28px; margin-bottom: 80px; color: #a0b0c0; font-size: .77rem; }
+    footer span { background: white; padding: 3px 14px; border-radius: 20px;
+                  box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+
+    /* ---- Print ---- */
+    @media print {
+      body > *:not(#print-area) { display: none !important; }
+      #print-area { display: block !important; padding: 10mm 14mm; font-size: 9pt; }
+    }
+    #print-area { display: none; }
+
+    /* ---- Richiesta print ---- */
+    .req-doc-title { font-size: 14pt; font-weight: 700; color: #5a2d82; margin-bottom: 6px; }
+    .req-doc-sub   { font-size: 9pt; color: #556; margin-bottom: 2px; }
+    .req-doc-sep   { border: none; border-top: 1.5px solid #5a2d82; margin: 10px 0; }
+    .req-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 8px; }
+    .req-table th { background: #f2eff8; padding: 5px 8px; text-align: left;
+                    border: 1px solid #ccc; font-size: 8.5pt; }
+    .req-table td { padding: 5px 8px; border: 1px solid #e0e0e0; vertical-align: top; }
+    .req-table tr:nth-child(even) td { background: #faf8ff; }
+    .req-sec-hdr { background: #e8dff4 !important; font-weight: 700; color: #3a1a5c; }
+    .req-firma { margin-top: 28px; font-size: 9pt; }
+    .req-firma-line { display: inline-block; width: 220px; border-bottom: 1px solid #333;
+                      margin-left: 8px; }
+    .pr-title { font-size: 16pt; font-weight: 700; color: #5a2d82; margin-bottom: 4px; }
+    .pr-sub   { font-size: 9pt; color: #556; margin-bottom: 2px; }
+    .pr-sec   { margin-top: 14px; }
+    .pr-sec-title { font-size: 11pt; font-weight: 700; color: #2d3748; border-bottom: 1.5px solid #5a2d82; padding-bottom: 3px; margin-bottom: 6px; }
+    .pr-table { width: 100%; border-collapse: collapse; font-size: 8pt; margin-top: 4px; }
+    .pr-table th { background: #f2eff8; padding: 4px 6px; text-align: left; border: 1px solid #ccc; font-size: 7.5pt; }
+    .pr-table td { padding: 4px 6px; border: 1px solid #e0e0e0; vertical-align: top; }
+    .pr-table tr:nth-child(even) td { background: #faf8ff; }
+
+    .no-print { }
+  </style>
+</head>
+<body>
+<header>
+  <div class="icon">🏥</div>
+  <h1>Presidi Medico-Chirurgici</h1>
+  <p>Gestione scorte ausili e dispositivi</p>
+</header>
+
+<div class="container">
+
+  <!-- Readonly banner -->
+  <div class="readonly-banner no-print">👁️ Modalità <strong>sola lettura</strong> — i dati si aggiornano in tempo reale ma non è possibile apportare modifiche.</div>
+
+  <!-- ====== CLOUD SYNC STRIP ====== -->
+  <div class="sync-strip no-print">
+    <div class="sync-row">
+      <span class="cloud-status off" id="cloud-status-badge">⚫ Non configurato</span>
+      <button class="btn btn-secondary btn-xs edit-only" id="btn-disconnect" style="display:none;" onclick="disconnectCloud()">🔌 Disconnetti</button>
+      <button class="btn btn-secondary btn-xs" id="btn-genlink"    style="display:none;" onclick="genConfigLink()">🔗 Link modifica</button>
+      <button class="btn btn-secondary btn-xs" id="btn-genlink-ro" style="display:none;" onclick="genReadonlyLink()">👁️ Link sola lettura</button>
+      <span class="sync-ts" id="ts-label">—</span>
+    </div>
+    <div class="cloud-setup-body edit-only" id="cloud-setup-body">
+      <div>
+        <div style="font-size:.72rem;font-weight:600;color:#556;margin-bottom:4px;">Codice personale</div>
+        <input type="text" id="fb-code" placeholder="es. ALE2025" />
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveCloudConfig()">☁️ Connetti cloud</button>
+    </div>
+    <div class="cfg-link-box" id="cfg-link-box">
+      <input type="text" id="cfg-link-input" readonly />
+      <button class="btn btn-secondary btn-xs" onclick="copyCfgLink()" style="margin-left:6px;">📋 Copia</button>
+    </div>
+  </div>
+
+  <!-- ====== PATIENT STRIP ====== -->
+  <div class="ph-strip no-print">
+    <div class="ph-field">
+      <span class="ph-lbl">Paziente</span>
+      <span class="ph-val" id="ph-paziente">—</span>
+    </div>
+    <div class="ph-field">
+      <span class="ph-lbl">Data nascita</span>
+      <span class="ph-val" id="ph-nascita">—</span>
+    </div>
+    <div class="ph-field">
+      <span class="ph-lbl">Codice fiscale</span>
+      <span class="ph-val" id="ph-cf">—</span>
+    </div>
+    <div class="ph-field no-print" style="margin-left:auto;">
+      <span class="ph-lbl">Soglia allerta (gg)</span>
+      <div class="alarm-row">
+        <input type="range" id="alarm-input" min="3" max="60" value="10"
+               oninput="setAlarm(this.value)" />
+        <span id="alarm-label">≤ 10 gg</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== ASSISTANCE STRIP ====== -->
+  <div class="as-strip no-print">
+    <div class="as-title">🏪 Riferimento Presidi</div>
+    <div class="as-field">
+      <span class="as-lbl">Ambulatorio</span>
+      <span class="as-val">Presidi Distribuzione Centro Nord – Copparo</span>
+    </div>
+    <div class="as-field">
+      <span class="as-lbl">Telefono</span>
+      <span class="as-val"><a href="tel:0532879788">0532 879788</a></span>
+    </div>
+  </div>
+
+  <!-- ====== EXPORT ====== -->
+  <div class="card no-print">
+    <div class="export-inner">
+      <h3>📤 Esporta</h3>
+      <div class="export-row" style="margin-top:10px;">
+        <button class="btn btn-primary"   onclick="exportPDF()">🖨️ Stampa / PDF</button>
+        <button class="btn btn-secondary" onclick="exportTXT()">📄 Esporta TXT</button>
+        <button class="btn btn-secondary" onclick="shareContent()">📤 Condividi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== SECTION CARDS ====== -->
+  <div id="sections-container"></div>
+
+  <!-- ====== SUMMARY ====== -->
+  <div class="card" id="summary-card">
+    <div class="summary-inner">
+      <div class="sum-header">
+        <span style="font-size:1.3rem;">⚠️</span>
+        <h3>Riepilogo scorte</h3>
+      </div>
+      <div class="sum-pills"  id="sum-pills"></div>
+      <div class="alert-list" id="alert-list"></div>
+    </div>
+  </div>
+
+  <footer class="no-print">
+    <span>Presidi MC · Aggiornato il <span id="ts-footer">—</span></span>
+  </footer>
+</div>
+
+<!-- ====== MODAL: Add / Edit ====== -->
+<div class="modal-overlay" id="item-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="modal-title">➕ Nuovo articolo</h3>
+      <button class="btn btn-secondary btn-sm"
+              style="background:rgba(255,255,255,.15);color:white;border-color:rgba(255,255,255,.3);"
+              onclick="closeModal()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Sezione</label>
+        <select id="f-sec">
+          <option value="medicazione">Medicazione (Tracheostomia / PEG)</option>
+          <option value="alimentazione">Alimentazione PEG</option>
+          <option value="continenza">Continenza</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Descrizione *</label>
+        <input type="text" id="f-desc" placeholder="es. Garza idrofila 16 veli" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Ditta / Fornitore</label>
+          <input type="text" id="f-ditta" placeholder="es. Benefis" />
+        </div>
+        <div class="field">
+          <label>REF. / Codice</label>
+          <input type="text" id="f-ref" placeholder="es. GP101016P" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Uso / Indicazione</label>
+        <input type="text" id="f-uso" placeholder="es. Pulizia tracheostomia" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Quantità disponibile</label>
+          <input type="number" id="f-qty" min="0" step="1" placeholder="0" />
+        </div>
+        <div class="field">
+          <label>Consumo / die (unità)</label>
+          <input type="number" id="f-consumo" min="0" step="0.001" placeholder="1" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Data ricarica</label>
+        <input type="date" id="f-refdate" />
+      </div>
+      <div class="field">
+        <label>Note</label>
+        <textarea id="f-note" placeholder="es. Consumo anno: ~2000 pz — Conf. da 100 pz"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal()">Annulla</button>
+      <button class="btn btn-primary"   onclick="saveItem()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL: TXT ====== -->
+<div class="txt-modal-overlay" id="txt-modal-overlay" onclick="if(event.target===this)closeTxtModal()">
+  <div class="txt-modal">
+    <div class="txt-modal-hdr">
+      <h3>📄 Presidi MC — Testo</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeTxtModal()">✖ Chiudi</button>
+    </div>
+    <div class="txt-modal-body">
+      <textarea id="txt-modal-content" readonly></textarea>
+    </div>
+    <div class="txt-modal-foot">
+      <button class="btn btn-secondary" onclick="copyTxtModal()">📋 Copia tutto</button>
+      <button class="btn btn-primary"   onclick="shareTxtModal()">📤 Condividi</button>
+      <button class="btn btn-secondary" onclick="closeTxtModal()">✖ Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating request bar -->
+<div class="req-bar no-print" id="req-bar">
+  <span class="req-bar-count" id="req-bar-count">0 selezionati</span>
+  <button class="req-bar-btn" onclick="printRichiesta()">🖨️ Stampa richiesta</button>
+  <button class="req-bar-btn" onclick="exportRichiestaTXT()">📄 TXT richiesta</button>
+  <button class="req-bar-clear" onclick="clearSelection()">✖ Deseleziona tutto</button>
+</div>
+
+<!-- Print area -->
+<div id="print-area"></div>
+
+<script>
+/* ================================================
+   ACCESS MODE  (edit | readonly)
+   ================================================ */
+let isReadonly = false;
+
+function applyReadonlyMode() {
+  isReadonly = true;
+  document.body.classList.add('readonly-mode');
+}
+
+/* ================================================
+   SELECTION STATE
+   ================================================ */
+const selected = new Set(); // keys: "secId__idx"
+
+function toggleCheck(key, cb) {
+  if (cb.checked) selected.add(key); else selected.delete(key);
+  // aggiorna stile riga
+  const row = cb.closest('tr');
+  if (row) row.classList.toggle('row-checked', cb.checked);
+  updateReqBar();
+}
+
+function toggleSelectAll(secId, masterCb) {
+  const items = sections[secId] || [];
+  items.forEach((_, idx) => {
+    const key = `${secId}__${idx}`;
+    const cb  = document.querySelector(`input[data-key="${key}"]`);
+    if (masterCb.checked) {
+      selected.add(key);
+      if (cb) { cb.checked = true; cb.closest('tr')?.classList.add('row-checked'); }
+    } else {
+      selected.delete(key);
+      if (cb) { cb.checked = false; cb.closest('tr')?.classList.remove('row-checked'); }
+    }
+  });
+  updateReqBar();
+}
+
+function clearSelection() {
+  selected.clear();
+  document.querySelectorAll('input[data-key]').forEach(cb => {
+    cb.checked = false;
+    cb.closest('tr')?.classList.remove('row-checked');
+  });
+  document.querySelectorAll('thead input[type=checkbox]').forEach(cb => cb.checked = false);
+  updateReqBar();
+}
+
+function updateReqBar() {
+  const n   = selected.size;
+  const bar = document.getElementById('req-bar');
+  const cnt = document.getElementById('req-bar-count');
+  if (bar) bar.classList.toggle('visible', n > 0);
+  if (cnt) cnt.textContent = n === 1 ? '1 selezionato' : `${n} selezionati`;
+}
+
+function _getSelectedItems() {
+  const result = [];
+  SECTIONS_DEF.forEach(s => {
+    const secItems = [];
+    (sections[s.id] || []).forEach((item, idx) => {
+      if (selected.has(`${s.id}__${idx}`)) secItems.push(item);
+    });
+    if (secItems.length > 0) result.push({ sec: s, items: secItems });
+  });
+  return result;
+}
+
+function printRichiesta() {
+  const data = _getSelectedItems();
+  if (data.length === 0) return;
+  const oggi = new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' });
+  const paz  = document.getElementById('ph-paziente').textContent;
+  const cf   = document.getElementById('ph-cf').textContent;
+  let html = `
+    <div class="req-doc-title">📋 Richiesta Presidi Medico-Chirurgici</div>
+    <div class="req-doc-sub">Paziente: <strong>${esc(paz)}</strong> &nbsp;|&nbsp; C.F.: <strong>${esc(cf)}</strong> — Data: ${oggi}</div>
+    <div class="req-doc-sub">Ambulatorio Presidi Distribuzione Centro Nord – Copparo &nbsp;|&nbsp; Tel. 0532 879788</div>
+    <hr class="req-doc-sep">
+    <table class="req-table">
+      <thead><tr>
+        <th>#</th><th>Descrizione</th><th>Ditta / REF.</th><th>Uso / Indicazione</th><th>Cons./die</th><th>Note</th>
+      </tr></thead>
+      <tbody>`;
+  let n = 1;
+  data.forEach(({ sec, items }) => {
+    html += `<tr><td colspan="6" class="req-sec-hdr">${sec.icon} ${esc(sec.title)}</td></tr>`;
+    items.forEach(item => {
+      const cons = item.consumo > 0 ? (item.consumo < 0.1 ? item.consumo.toFixed(3) : item.consumo) + '/die' : '—';
+      html += `<tr>
+        <td style="text-align:center;font-weight:700;">${n++}</td>
+        <td><strong>${esc(item.desc)}</strong></td>
+        <td>${esc(item.ditta)}${item.ref ? '<br><span style="font-size:7.5pt;">REF: ' + esc(item.ref) + '</span>' : ''}</td>
+        <td style="font-size:8pt;">${esc(item.uso || '')}</td>
+        <td>${cons}</td>
+        <td style="font-size:8pt;">${esc(item.note || '')}</td>
+      </tr>`;
+    });
+  });
+  html += `</tbody></table>
+    <div class="req-firma">
+      <p>Firma / Timbro: <span class="req-firma-line"></span></p>
+    </div>`;
+  const printArea = document.getElementById('print-area');
+  printArea.innerHTML = html;
+  printArea.style.display = 'block';
+  window.print();
+  printArea.style.display = 'none';
+  printArea.innerHTML = '';
+}
+
+function exportRichiestaTXT() {
+  const data = _getSelectedItems();
+  if (data.length === 0) return;
+  const oggi = new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' });
+  const paz  = document.getElementById('ph-paziente').textContent;
+  const cf   = document.getElementById('ph-cf').textContent;
+  const DLINE = '═'.repeat(72);
+  const LINE  = '─'.repeat(72);
+  function pad(s, n) { return String(s || '').slice(0, n).padEnd(n); }
+
+  let txt = DLINE + '\n';
+  txt += '  RICHIESTA PRESIDI MEDICO-CHIRURGICI\n';
+  txt += DLINE + '\n';
+  txt += `  Paziente  : ${paz}\n`;
+  txt += `  C.F.      : ${cf}\n`;
+  txt += `  Data      : ${oggi}\n`;
+  txt += `  Consegnare a: Ambulatorio Presidi Distribuzione Centro Nord – Copparo\n`;
+  txt += `  Telefono  : 0532 879788\n`;
+  txt += DLINE + '\n\n';
+
+  const lbl = (k, v) => v ? `  ${(k+':').padEnd(12)} ${v}\n` : '';
+  let n = 1;
+  data.forEach(({ sec, items }) => {
+    txt += `\n${LINE}\n  ${sec.title}\n${LINE}\n`;
+    items.forEach(item => {
+      txt += `\n  ${n++}. ${item.desc}\n`;
+      txt += lbl('Ditta',  item.ditta);
+      txt += lbl('REF.',   item.ref);
+      txt += lbl('Uso',    item.uso);
+      txt += lbl('Note',   item.note);
+    });
+    txt += '\n';
+  });
+  txt += LINE + '\n  Firma: _______________________________\n' + DLINE + '\n';
+
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (isMobile) {
+    document.getElementById('txt-modal-content').value = txt;
+    document.getElementById('txt-modal-overlay').classList.add('open');
+  } else {
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `richiesta_mc_${todayStr()}.txt`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+}
+
+/* ================================================
+   CONFIG
+   ================================================ */
+const STORAGE_KEY = 'presidi_mc_v1';
+const FB_CFG_KEY  = 'farmaci_firebase_cfg';   // condiviso con farmaci/presidi
+const ALARM_KEY   = 'presidi_mc_alarm_days';
+let alarmDays = parseInt(localStorage.getItem(ALARM_KEY) || '10');
+
+const SECTIONS_DEF = [
+  { id: 'medicazione',   title: 'Medicazione – Tracheostomia / PEG', icon: '🩹', clr: 'medicazione'   },
+  { id: 'alimentazione', title: 'Alimentazione PEG',                  icon: '🍶', clr: 'alimentazione' },
+  { id: 'continenza',    title: 'Continenza',                         icon: '💧', clr: 'continenza'    },
+];
+
+/* ================================================
+   DEFAULT ITEMS (caricati solo se localStorage vuoto)
+   Basati su: 20251126_ALE_elenco_presidi_MC_in_uso_.docx
+   ================================================ */
+const DEFAULT_ITEMS = {
+  medicazione: [
+    {
+      desc:    'Garza idrofila cotone 12/8-32/40 – 16 veli',
+      ditta:   'Benefis s.r.l.',
+      ref:     'GP101016P',
+      uso:     'Guarnizione collo notte; pulizia cute PEG e tracheostomia',
+      qty:     0, consumo: 5, refDate: todayStr(),
+      note:    'Compresse 16 veli NON sterile. Consumo anno: ~2000 pz'
+    },
+    {
+      desc:    'Absorber Pad 20×20 cm',
+      ditta:   'BASTOS VIEGAS s.a.',
+      ref:     '485007',
+      uso:     'Protezione notturna area collo-spalle (versamenti cannula)',
+      qty:     0, consumo: 2, refDate: todayStr(),
+      note:    'TNT altamente assorbente, un lato azzurro. Conf. 25 pz. Consumo anno: ~750 pz'
+    },
+    {
+      desc:    'NEOXIDINA soluzione clorexidina 250 ml spray',
+      ditta:   'Farmec',
+      ref:     '',
+      uso:     'Disinfezione cutanea zona PEG (1 ml/die)',
+      qty:     0, consumo: 0.004, refDate: todayStr(),
+      note:    'Flacone 250 ml con erogatore spray. Consumo anno: ~2 flaconi'
+    },
+    {
+      desc:    'Paper Surgical Tape 3M',
+      ditta:   '3M',
+      ref:     '840W',
+      uso:     'Fissaggio medicazione PEG (garza) – 4 cm/die',
+      qty:     0, consumo: 0.042, refDate: todayStr(),
+      note:    'Nastro chirurgico in TNT su rocchetto. Consumo anno: ~15 rotoli'
+    },
+    {
+      desc:    'Crema idratante protettiva – ossido zinco 8%',
+      ditta:   'MOSI Italia – OLCELLI Farmaceutici',
+      ref:     '',
+      uso:     'Protezione cute contorno tracheostomia (2×/die, ~2 ml)',
+      qty:     0, consumo: 0.04, refDate: todayStr(),
+      note:    'Tubetto 50 ml. Consumo anno: ~15 tubetti'
+    }
+  ],
+  alimentazione: [
+    {
+      desc:    'MIC-KEY Low Profile G-Tube 20Fr – 3,5 cm',
+      ditta:   'AVANOS',
+      ref:     '8140-20-3.5',
+      uso:     'Sonda gastrostomica a basso profilo (1 anno)',
+      qty:     0, consumo: 0.003, refDate: todayStr(),
+      note:    'Diametro 20 Fr, lunghezza 2,5 cm. Consumo anno: ~2 pz (1 in uso + 1 scorta)'
+    },
+    {
+      desc:    'MIC-KEY Bolus Feed Extension Set ENFit 30 cm',
+      ditta:   'AVANOS',
+      ref:     '0143-12',
+      uso:     'Prolunga per alimentazione in bolo via PEG (1/30 gg)',
+      qty:     0, consumo: 0.033, refDate: todayStr(),
+      note:    'Connettore ENFit + SECUR-LOK + morsetto. Scatola 5 pz. Consumo anno: ~15 pz (3 scatole)'
+    }
+  ],
+  continenza: [
+    {
+      desc:    'Condom urine silicone 29 mm + sacca letto 120 cm',
+      ditta:   'SILIKOKONDOM',
+      ref:     'R052850-32729',
+      uso:     'Incontinenza notturna (1 sistema/die)',
+      qty:     0, consumo: 1, refDate: todayStr(),
+      note:    'UltraFlex Standard 29 mm auto-aderente. Sacca 120 cm monouso. Consumo anno: ~365 pz'
+    }
+  ]
+};
+
+/* ================================================
+   DATA MODEL
+   ================================================ */
+let sections = { medicazione: [], alimentazione: [], continenza: [] };
+(function loadLocal() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if (s && typeof s === 'object') {
+      sections = { ...sections, ...s };
+    } else {
+      // Prima apertura: carica defaults
+      sections = JSON.parse(JSON.stringify(DEFAULT_ITEMS));
+    }
+  } catch(e) {
+    sections = JSON.parse(JSON.stringify(DEFAULT_ITEMS));
+  }
+})();
+
+const collapsed = { medicazione: false, alimentazione: false, continenza: false };
+
+/* ================================================
+   UTILS
+   ================================================ */
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function fmtDate(s) {
+  if (!s) return '—';
+  const [y, m, d] = s.split('-');
+  return `${d}/${m}/${y}`;
+}
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ================================================
+   CALCULATIONS
+   ================================================ */
+function getAvail(item) {
+  if (!item.consumo || item.consumo <= 0) return item.qty;
+  const today = new Date();
+  const ref   = new Date(item.refDate || todayStr());
+  const daysSince = Math.max(0, Math.floor((today - ref) / 86400000));
+  return Math.max(0, item.qty - item.consumo * daysSince);
+}
+function getDays(item) {
+  if (!item.consumo || item.consumo <= 0) return Infinity;
+  const avail = getAvail(item);
+  return avail > 0 ? Math.floor(avail / item.consumo) : 0;
+}
+function statusOf(days) {
+  if (!isFinite(days)) return 'ok';
+  if (days <= 3) return 'crit';
+  if (days <= alarmDays) return 'warn';
+  return 'ok';
+}
+const STATUS_LABEL = { ok: 'OK', warn: 'Attenzione', crit: 'Scorta critica' };
+
+/* ================================================
+   STORAGE
+   ================================================ */
+function _saveCore() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(sections)); } catch(e) {}
+  updateTimestamp();
+}
+function save() { _saveCore(); _cloudWrite(); }
+function updateTimestamp() {
+  const ts = new Date().toLocaleDateString('it-IT',
+    { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const el = document.getElementById('ts-label');
+  const el2 = document.getElementById('ts-footer');
+  if (el)  el.textContent  = ts;
+  if (el2) el2.textContent = ts;
+}
+
+/* ================================================
+   ALARM
+   ================================================ */
+function setAlarm(v) {
+  alarmDays = parseInt(v);
+  localStorage.setItem(ALARM_KEY, alarmDays);
+  document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+  render();
+}
+
+/* ================================================
+   BUILD SECTION CARDS
+   ================================================ */
+function buildSectionCards() {
+  const container = document.getElementById('sections-container');
+  container.innerHTML = '';
+  SECTIONS_DEF.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = 'card-' + s.id;
+    card.innerHTML = `
+      <div class="sec-hdr sec-${s.clr}" onclick="toggleSection('${s.id}')">
+        <div class="sec-hdr-left">
+          <span class="sec-icon">${s.icon}</span>
+          <h2>${esc(s.title)}</h2>
+        </div>
+        <button class="toggle-btn no-print" id="toggle-${s.id}"
+                onclick="event.stopPropagation();toggleSection('${s.id}')">▼</button>
+      </div>
+      <div class="sec-body" id="body-${s.id}">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="cb-cell no-print">
+                  <input type="checkbox" title="Seleziona tutto" onchange="toggleSelectAll('${s.id}',this)" />
+                </th>
+                <th>Articolo / Uso</th>
+                <th>Qtà disp.</th>
+                <th>Cons./die</th>
+                <th>Gg autonomia</th>
+                <th>Ricarica</th>
+                <th>Stato</th>
+                <th class="no-print">Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-${s.id}"></tbody>
+          </table>
+        </div>
+        <div class="sec-foot no-print">
+          <span class="sec-count" id="count-${s.id}">0 articoli</span>
+          <button class="btn btn-primary btn-sm edit-only" onclick="openForm('${s.id}',-1)">➕ Aggiungi</button>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+/* ================================================
+   RENDER
+   ================================================ */
+function render() {
+  SECTIONS_DEF.forEach(s => renderSection(s.id));
+  updateSummary();
+}
+
+function renderSection(secId) {
+  const tbody = document.getElementById('tbody-' + secId);
+  if (!tbody) return;
+  const items = sections[secId] || [];
+  const count = document.getElementById('count-' + secId);
+  if (count) count.textContent = items.length + (items.length === 1 ? ' articolo' : ' articoli');
+
+  tbody.innerHTML = '';
+  if (items.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8">
+      <div class="empty-st">
+        <div class="e-icon">📦</div>
+        <p>Nessun articolo.</p>
+      </div></td></tr>`;
+    return;
+  }
+  items.forEach((item, idx) => {
+    const avail   = getAvail(item);
+    const days    = getDays(item);
+    const st      = statusOf(days);
+    const dDisp   = isFinite(days) ? days : '∞';
+    const dCls    = 'days-' + st;
+    const cbKey   = `${secId}__${idx}`;
+    const checked = selected.has(cbKey);
+    const tr = document.createElement('tr');
+    if (checked) tr.classList.add('row-checked');
+    tr.innerHTML = `
+      <td class="cb-cell no-print">
+        <input type="checkbox" data-key="${cbKey}" ${checked ? 'checked' : ''}
+               onchange="toggleCheck('${cbKey}', this)" />
+      </td>
+      <td>
+        <div class="item-desc">${esc(item.desc)}</div>
+        <div class="item-meta">${item.ditta ? esc(item.ditta) : ''}${item.ditta && item.ref ? ' · ' : ''}${item.ref ? 'REF: ' + esc(item.ref) : ''}</div>
+        ${item.uso ? `<div class="item-uso">${esc(item.uso)}</div>` : ''}
+      </td>
+      <td>
+        <div class="qty-wrap">
+          <span class="qty-val">${avail % 1 === 0 ? avail : avail.toFixed(2)}</span>
+          <div class="quick-row no-print edit-only">
+            <span class="quick-lbl">+</span>
+            <input class="quick-input" type="number" min="0.001" step="1"
+              id="qi-${secId}-${idx}" placeholder="q."
+              onkeydown="if(event.key==='Enter')addQty('${secId}',${idx},this.value,this)" />
+            <button class="btn btn-secondary btn-xs"
+              onclick="addQty('${secId}',${idx},document.getElementById('qi-${secId}-${idx}').value,document.getElementById('qi-${secId}-${idx}'))">✓</button>
+          </div>
+        </div>
+      </td>
+      <td>${item.consumo > 0 ? (item.consumo < 0.1 ? item.consumo.toFixed(3) : item.consumo) + '/die' : '—'}</td>
+      <td><span class="days-num ${dCls}">${dDisp}</span>${isFinite(days) ? ' gg' : ''}</td>
+      <td><span class="date-val">${fmtDate(item.refDate)}</span></td>
+      <td><span class="pill ${st}">${STATUS_LABEL[st]}</span></td>
+      <td class="no-print edit-only" style="white-space:nowrap;">
+        <button class="btn btn-secondary btn-sm" onclick="openForm('${secId}',${idx})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('${secId}',${idx})" style="margin-left:4px;">🗑️</button>
+      </td>`;  // fine template row
+    tbody.appendChild(tr);
+  });
+}
+
+/* ================================================
+   SUMMARY
+   ================================================ */
+function updateSummary() {
+  let okN = 0, warnN = 0, critN = 0;
+  const alertItems = [];
+  SECTIONS_DEF.forEach(s => {
+    (sections[s.id] || []).forEach(item => {
+      const days = getDays(item);
+      const st   = statusOf(days);
+      if (st === 'ok')   okN++;
+      if (st === 'warn') { warnN++; alertItems.push({ item, secTitle: s.title, days, st }); }
+      if (st === 'crit') { critN++; alertItems.push({ item, secTitle: s.title, days, st }); }
+    });
+  });
+  const pills = document.getElementById('sum-pills');
+  const list  = document.getElementById('alert-list');
+  if (pills) pills.innerHTML = `
+    <span class="sum-pill sum-ok">✅ OK: ${okN}</span>
+    <span class="sum-pill sum-warn">⚠️ Attenzione: ${warnN}</span>
+    <span class="sum-pill sum-crit">🔴 Critici: ${critN}</span>`;
+  if (list) {
+    if (alertItems.length === 0) {
+      list.innerHTML = '<span style="color:#1a7a40;font-size:.82rem;">✅ Tutte le scorte sono nella norma.</span>';
+    } else {
+      alertItems.sort((a,b) => a.days - b.days);
+      list.innerHTML = alertItems.map(({ item, secTitle, days, st }) => `
+        <div class="alert-item">
+          <span class="pill ${st}" style="font-size:.68rem;padding:1px 8px;">${STATUS_LABEL[st]}</span>
+          <span><strong>${esc(item.desc)}</strong>
+          <span style="color:#8a9ab0;font-size:.78rem;">(${esc(secTitle)})</span>
+          — ${isFinite(days) ? days + ' gg' : '∞'}</span>
+        </div>`).join('');
+    }
+  }
+}
+
+/* ================================================
+   TOGGLE SECTION
+   ================================================ */
+function toggleSection(secId) {
+  const body   = document.getElementById('body-' + secId);
+  const toggle = document.getElementById('toggle-' + secId);
+  if (!body) return;
+  collapsed[secId] = !collapsed[secId];
+  body.classList.toggle('collapsed', collapsed[secId]);
+  if (toggle) toggle.textContent = collapsed[secId] ? '▶' : '▼';
+}
+
+/* ================================================
+   CRUD
+   ================================================ */
+let _editSec = null;
+let _editIdx = -1;
+
+function openForm(secId, idx) {
+  if (isReadonly) return;
+  _editSec = secId;
+  _editIdx = idx;
+  const item = idx >= 0 ? sections[secId][idx] : null;
+  document.getElementById('modal-title').textContent = idx >= 0 ? '✏️ Modifica articolo' : '➕ Nuovo articolo';
+  document.getElementById('f-sec').value     = secId;
+  document.getElementById('f-desc').value    = item ? item.desc    : '';
+  document.getElementById('f-ditta').value   = item ? item.ditta   : '';
+  document.getElementById('f-ref').value     = item ? item.ref     : '';
+  document.getElementById('f-uso').value     = item ? (item.uso || '') : '';
+  document.getElementById('f-qty').value     = item ? item.qty     : '';
+  document.getElementById('f-consumo').value = item ? item.consumo : '';
+  document.getElementById('f-refdate').value = item ? item.refDate : todayStr();
+  document.getElementById('f-note').value    = item ? (item.note || '') : '';
+  document.getElementById('f-sec').onchange  = function() { _editSec = this.value; };
+  document.getElementById('item-modal').classList.add('open');
+  setTimeout(() => document.getElementById('f-desc').focus(), 80);
+}
+
+function closeModal() {
+  document.getElementById('item-modal').classList.remove('open');
+}
+
+function saveItem() {
+  const desc = document.getElementById('f-desc').value.trim();
+  if (!desc) { alert('La Descrizione è obbligatoria.'); return; }
+  const secId  = document.getElementById('f-sec').value;
+  const newItem = {
+    desc,
+    ditta:   document.getElementById('f-ditta').value.trim(),
+    ref:     document.getElementById('f-ref').value.trim(),
+    uso:     document.getElementById('f-uso').value.trim(),
+    qty:     parseFloat(document.getElementById('f-qty').value) || 0,
+    consumo: parseFloat(document.getElementById('f-consumo').value) || 0,
+    refDate: document.getElementById('f-refdate').value || todayStr(),
+    note:    document.getElementById('f-note').value.trim()
+  };
+  if (!sections[secId]) sections[secId] = [];
+  if (_editIdx >= 0 && _editSec === secId) {
+    sections[secId][_editIdx] = newItem;
+  } else if (_editIdx >= 0 && _editSec !== secId) {
+    sections[_editSec].splice(_editIdx, 1);
+    sections[secId].push(newItem);
+  } else {
+    sections[secId].push(newItem);
+  }
+  save();
+  render();
+  closeModal();
+}
+
+function deleteItem(secId, idx) {
+  const item = sections[secId][idx];
+  if (!confirm(`Eliminare "${item.desc}"?`)) return;
+  // Rimuove le chiavi di selezione della sezione per evitare sfasamenti di indice
+  [...selected].filter(k => k.startsWith(secId + '__')).forEach(k => selected.delete(k));
+  sections[secId].splice(idx, 1);
+  save();
+  render();
+  updateReqBar();
+}
+
+function addQty(secId, idx, val, inputEl) {
+  const v = parseFloat(val);
+  if (isNaN(v) || v <= 0) { alert('Inserisci un numero valido (> 0).'); return; }
+  const item  = sections[secId][idx];
+  const avail = getAvail(item);
+  item.qty     = Math.round((avail + v) * 1000) / 1000;
+  item.refDate = todayStr();
+  save();
+  if (inputEl) inputEl.value = '';
+  renderSection(secId);
+  updateSummary();
+}
+
+/* ================================================
+   EXPORT — PDF
+   ================================================ */
+function exportPDF() {
+  const oggi = new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' });
+  const paz  = document.getElementById('ph-paziente').textContent;
+  const cf   = document.getElementById('ph-cf').textContent;
+  let html = `<div class="pr-title">🏥 Presidi Medico-Chirurgici</div>
+    <div class="pr-sub">Paziente: ${esc(paz)} &nbsp;|&nbsp; C.F.: ${esc(cf)} — Generato il ${oggi}</div>
+    <div class="pr-sub" style="margin-top:4px;color:#5a2d82;font-weight:600;">
+      Presidi: Ambulatorio Distribuzione Centro Nord – Copparo — Tel. 0532 879788
+    </div>`;
+  SECTIONS_DEF.forEach(s => {
+    const items = sections[s.id] || [];
+    html += `<div class="pr-sec">
+      <div class="pr-sec-title">${s.icon} ${esc(s.title)}</div>`;
+    if (items.length === 0) {
+      html += '<p style="font-size:9pt;color:#888;">Nessun articolo.</p>';
+    } else {
+      html += `<table class="pr-table">
+        <thead><tr>
+          <th>Descrizione</th><th>Ditta / REF.</th><th>Uso</th>
+          <th>Qtà disp.</th><th>Cons./die</th><th>Gg aut.</th><th>Ricarica</th><th>Stato</th>
+        </tr></thead><tbody>`;
+      items.forEach(item => {
+        const avail = getAvail(item);
+        const days  = getDays(item);
+        const st    = statusOf(days);
+        const cons  = item.consumo < 0.1 ? item.consumo.toFixed(3) : item.consumo;
+        html += `<tr>
+          <td><strong>${esc(item.desc)}</strong>${item.note ? '<br><span style="font-size:7pt;color:#888;">' + esc(item.note) + '</span>' : ''}</td>
+          <td>${esc(item.ditta)}${item.ref ? '<br>REF: ' + esc(item.ref) : ''}</td>
+          <td style="font-size:7.5pt;">${esc(item.uso || '')}</td>
+          <td>${avail % 1 === 0 ? avail : avail.toFixed(2)}</td>
+          <td>${item.consumo > 0 ? cons + '/die' : '—'}</td>
+          <td><strong>${isFinite(days) ? days : '∞'}</strong> gg</td>
+          <td>${fmtDate(item.refDate)}</td>
+          <td>${STATUS_LABEL[st]}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+  });
+  const printArea = document.getElementById('print-area');
+  printArea.innerHTML = html;
+  printArea.style.display = 'block';
+  window.print();
+  printArea.style.display = 'none';
+  printArea.innerHTML = '';
+}
+
+/* ================================================
+   EXPORT — TXT
+   ================================================ */
+function exportTXT() {
+  const oggi = new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' });
+  const paz  = document.getElementById('ph-paziente').textContent;
+  const cf   = document.getElementById('ph-cf').textContent;
+  const DLINE = '═'.repeat(72);
+  const LINE  = '─'.repeat(72);
+  const lbl = (k, v) => v ? `  ${(k+':').padEnd(12)} ${v}\n` : '';
+
+  let txt = DLINE + '\n';
+  txt += '  PRESIDI MEDICO-CHIRURGICI\n';
+  txt += DLINE + '\n';
+  txt += `  Paziente  : ${paz}\n`;
+  txt += `  C.F.      : ${cf}\n`;
+  txt += `  Generato  : ${oggi}\n`;
+  txt += DLINE + '\n';
+  txt += `  Presidi   : Ambulatorio Distribuzione Centro Nord – Copparo\n`;
+  txt += `  Telefono  : 0532 879788\n`;
+  txt += DLINE + '\n';
+
+  SECTIONS_DEF.forEach(s => {
+    const items = sections[s.id] || [];
+    txt += `\n${LINE}\n  ${s.title}\n${LINE}\n`;
+    if (items.length === 0) { txt += '  (nessun articolo)\n'; return; }
+    items.forEach((item, i) => {
+      const avail = getAvail(item);
+      const days  = getDays(item);
+      const st    = statusOf(days);
+      const cons  = item.consumo > 0
+        ? (item.consumo < 0.1 ? item.consumo.toFixed(3) : String(item.consumo)) + '/die'
+        : '—';
+      const ggStr = isFinite(days) ? days + ' gg' : '∞';
+      txt += `\n  ${i + 1}. ${item.desc}\n`;
+      txt += lbl('Ditta',    item.ditta);
+      txt += lbl('REF.',     item.ref);
+      txt += lbl('Uso',      item.uso);
+      txt += lbl('Qtà disp.', (avail % 1 === 0 ? avail : avail.toFixed(2)) + ' unità');
+      txt += lbl('Cons./die', cons);
+      txt += lbl('Gg aut.',  ggStr + '  [' + STATUS_LABEL[st] + ']');
+      txt += lbl('Ricarica', fmtDate(item.refDate));
+      txt += lbl('Note',     item.note);
+    });
+    txt += '\n';
+  });
+
+  // Allerte
+  const alerts = [];
+  SECTIONS_DEF.forEach(s => {
+    (sections[s.id] || []).forEach(item => {
+      const days = getDays(item);
+      if (statusOf(days) !== 'ok') alerts.push({ item, sec: s.title, days });
+    });
+  });
+  if (alerts.length > 0) {
+    txt += '\n' + DLINE + '\n  DA RIFORNIRE\n' + DLINE + '\n';
+    alerts.sort((a,b) => a.days - b.days);
+    alerts.forEach(({ item, sec, days }) => {
+      txt += `  • ${item.desc} (${sec}) — ${isFinite(days) ? days + ' gg' : '∞'}\n`;
+    });
+    txt += DLINE + '\n';
+  }
+
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (isMobile) {
+    document.getElementById('txt-modal-content').value = txt;
+    document.getElementById('txt-modal-overlay').classList.add('open');
+  } else {
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `presidi_mc_${todayStr()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+}
+
+function closeTxtModal() {
+  document.getElementById('txt-modal-overlay').classList.remove('open');
+}
+function copyTxtModal() {
+  const ta = document.getElementById('txt-modal-content');
+  navigator.clipboard.writeText(ta.value).catch(() => { ta.select(); document.execCommand('copy'); });
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✔ Copiato!';
+  setTimeout(() => btn.textContent = orig, 2000);
+}
+function shareTxtModal() {
+  const txt = document.getElementById('txt-modal-content').value;
+  if (navigator.share) {
+    navigator.share({ title: 'Presidi MC', text: txt }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(txt).catch(() => {});
+    alert('Contenuto copiato negli appunti.');
+  }
+}
+function shareContent() { exportTXT(); }
+
+/* ================================================
+   FIREBASE CLOUD SYNC
+   ================================================ */
+const FB_BASE_CFG = {
+  apiKey:            "AIzaSyCj5u6pMaXPJhrkFYLbNPCStbF3taMTU7c",
+  authDomain:        "farmaci-ca400.firebaseapp.com",
+  projectId:         "farmaci-ca400",
+  storageBucket:     "farmaci-ca400.firebasestorage.app",
+  messagingSenderId: "938882299940",
+  appId:             "1:938882299940:web:a9a712860941c4741700b1"
+};
+let cloudCode    = null;
+let cloudPollId  = null;
+let cloudLastWrite = 0;
+
+function fsUrl(code) {
+  return `https://firestore.googleapis.com/v1/projects/${FB_BASE_CFG.projectId}`
+       + `/databases/(default)/documents/presidi_mc/${encodeURIComponent(code)}`
+       + `?key=${FB_BASE_CFG.apiKey}`;
+}
+function setCloudStatus(cls, text) {
+  const el = document.getElementById('cloud-status-badge');
+  if (el) { el.className = `cloud-status ${cls}`; el.textContent = text; }
+}
+function loadFbCfg() {
+  try { return JSON.parse(localStorage.getItem(FB_CFG_KEY) || 'null'); } catch(e) { return null; }
+}
+async function _cloudRead(code) {
+  const res = await fetch(fsUrl(code));
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const doc = await res.json();
+  const str = doc.fields?.payload?.stringValue;
+  return str ? JSON.parse(str) : null;
+}
+async function _cloudWrite() {
+  if (!cloudCode || isReadonly) return;
+  try {
+    cloudLastWrite = Date.now();
+    await fetch(fsUrl(cloudCode), {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          payload: { stringValue: JSON.stringify({ sections, alarmDays }) },
+          savedAt: { stringValue: new Date().toISOString() }
+        }
+      })
+    });
+    setCloudStatus('ok', '✅ Sincronizzato');
+  } catch(e) {
+    setCloudStatus('err', '⛔ Errore scrittura');
+  }
+}
+async function _cloudPoll() {
+  if (!cloudCode) return;
+  try {
+    const remote = await _cloudRead(cloudCode);
+    if (!remote || typeof remote.sections !== 'object') return;
+    const savedAt = remote.savedAt ? new Date(remote.savedAt).getTime() : 0;
+    if (savedAt <= cloudLastWrite + 2000) return;
+    sections  = { ...sections, ...remote.sections };
+    alarmDays = remote.alarmDays || alarmDays;
+    _saveCore();
+    render();
+    document.getElementById('alarm-input').value       = alarmDays;
+    document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+    cloudLastWrite = Date.now();
+    setCloudStatus('ok', '✅ Sincronizzato');
+  } catch(e) { /* silent */ }
+}
+function _cloudConnected(code) {
+  const label = isReadonly ? '👁️ Sola lettura — ' + code : '✅ Cloud attivo — ' + code;
+  setCloudStatus(isReadonly ? 'sync' : 'ok', label);
+  if (!isReadonly) document.getElementById('btn-disconnect').style.display = '';
+  document.getElementById('btn-genlink').style.display    = '';
+  document.getElementById('btn-genlink-ro').style.display = '';
+  document.getElementById('cloud-setup-body').style.display = 'none';
+  if (cloudPollId) clearInterval(cloudPollId);
+  cloudPollId = setInterval(_cloudPoll, 30000);
+}
+async function initCloud(personalCode) {
+  cloudCode = personalCode.trim();
+  if (!cloudCode) { alert('Inserisci il Codice personale.'); return; }
+  setCloudStatus('sync', '🔄 Connessione…');
+  try {
+    const remote = await _cloudRead(cloudCode);
+    if (remote && typeof remote.sections === 'object') {
+      sections  = { ...sections, ...remote.sections };
+      alarmDays = remote.alarmDays || alarmDays;
+      _saveCore();
+      await _cloudWrite();
+      render();
+      document.getElementById('alarm-input').value       = alarmDays;
+      document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+    } else {
+      await _cloudWrite();
+    }
+    cloudLastWrite = Date.now();
+    localStorage.setItem(FB_CFG_KEY, JSON.stringify({ personalCode: cloudCode }));
+    _cloudConnected(cloudCode);
+  } catch(e) {
+    setCloudStatus('err', '⛔ Errore: ' + e.message);
+  }
+}
+function saveCloudConfig() {
+  const code = document.getElementById('fb-code').value.trim();
+  if (!code) { alert('Inserisci il Codice personale.'); return; }
+  initCloud(code);
+}
+function genConfigLink() {
+  if (!cloudCode) return;
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify({ personalCode: cloudCode, mode: 'edit' }))));
+  const base    = window.location.href.split('#')[0];
+  document.getElementById('cfg-link-input').value = base + '#fbcfg=' + encoded;
+  document.getElementById('cfg-link-box').style.display = '';
+}
+function genReadonlyLink() {
+  if (!cloudCode) return;
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify({ personalCode: cloudCode, mode: 'readonly' }))));
+  const base    = window.location.href.split('#')[0];
+  document.getElementById('cfg-link-input').value = base + '#fbcfg=' + encoded;
+  document.getElementById('cfg-link-box').style.display = '';
+}
+function copyCfgLink() {
+  const inp = document.getElementById('cfg-link-input');
+  inp.select();
+  navigator.clipboard.writeText(inp.value).catch(() => {});
+  const btn = inp.nextElementSibling;
+  const orig = btn.textContent;
+  btn.textContent = '✔ Copiato!';
+  setTimeout(() => btn.textContent = orig, 2000);
+}
+function checkCfgFromHash() {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#fbcfg=')) return null;
+  try {
+    const json = decodeURIComponent(escape(atob(hash.slice(7))));
+    const cfg  = JSON.parse(json);
+    if (!cfg.personalCode) return null;
+    // Non rimuovere hash se readonly: deve restare attivo a ogni apertura
+    if (cfg.mode !== 'readonly') history.replaceState(null, '', window.location.pathname);
+    return cfg;
+  } catch(e) { return null; }
+}
+function disconnectCloud() {
+  if (cloudPollId) { clearInterval(cloudPollId); cloudPollId = null; }
+  cloudCode = null;
+  localStorage.removeItem(FB_CFG_KEY);
+  setCloudStatus('off', '⚫ Non configurato');
+  document.getElementById('btn-disconnect').style.display   = 'none';
+  document.getElementById('btn-genlink').style.display      = 'none';
+  document.getElementById('cfg-link-box').style.display     = 'none';
+  document.getElementById('cloud-setup-body').style.display = '';
+}
+
+/* ================================================
+   INIT
+   ================================================ */
+buildSectionCards();
+render();
+updateTimestamp();
+
+// Migrazione dati: corregge vecchi valori MIC-KEY 2,5 cm → 3,5 cm
+(function migrateData() {
+  let changed = false;
+  (sections['alimentazione'] || []).forEach(item => {
+    if (item.ref === '8140-20-2.5') { item.ref  = '8140-20-3.5'; changed = true; }
+    if (item.desc && item.desc.includes('2,5 cm')) { item.desc = item.desc.replace('2,5 cm', '3,5 cm'); changed = true; }
+  });
+  if (changed) { _saveCore(); }
+})();
+
+// Valori predefiniti paziente
+(function initDefaults() {
+  const paz = document.getElementById('ph-paziente');
+  const nas = document.getElementById('ph-nascita');
+  const cf  = document.getElementById('ph-cf');
+  if (paz) paz.textContent = 'Alessandro PREVIATI';
+  if (nas) nas.textContent = '12/11/1992';
+  if (cf)  cf.textContent  = 'PRVLSN92S12D548Q';
+})();
+
+// Auto-connect dal localStorage, hash URL o codice predefinito
+(function autoConnect() {
+  const DEFAULT_CODE = 'AlePrev1992';
+  const fromHash = checkCfgFromHash();
+  // Se viene da hash readonly, non sovrascrivere con localStorage
+  const cfg = fromHash || (fromHash?.mode === 'readonly' ? fromHash : loadFbCfg());
+  const resolved = fromHash || loadFbCfg();
+  const code = (resolved && resolved.personalCode) ? resolved.personalCode : DEFAULT_CODE;
+  if (resolved && resolved.mode === 'readonly') applyReadonlyMode();
+  document.getElementById('fb-code').value = code;
+  initCloud(code);
+})();
+</script>
+</body>
+</html>

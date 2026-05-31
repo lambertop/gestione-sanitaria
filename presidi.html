@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presidi e Ausili</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+           background: #f2eff8; min-height: 100vh; color: #2d3748; }
+
+    header { background: linear-gradient(135deg, #5a2d82, #3a1a5c); color: white;
+             padding: 20px 24px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+    header .icon { font-size: 2rem; }
+    header h1   { font-size: 1.5rem; font-weight: 700; letter-spacing: .4px; }
+    header p    { font-size: .85rem; opacity: .85; margin-top: 2px; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+
+    /* ---- Card base ---- */
+    .card { background: white; border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.07); margin-bottom: 20px; overflow: hidden; }
+
+    /* ---- Section headers ---- */
+    .sec-hdr { display: flex; align-items: center; justify-content: space-between;
+               padding: 13px 18px; cursor: pointer; user-select: none; color: white; }
+    .sec-hdr-left { display: flex; align-items: center; gap: 10px; }
+    .sec-hdr h2   { font-size: .95rem; font-weight: 700; }
+    .sec-hdr .sec-icon { font-size: 1.3rem; }
+    .sec-hdr .toggle-btn { font-size: .75rem; opacity: .8; background: rgba(255,255,255,.18);
+                           border: none; color: white; border-radius: 6px;
+                           padding: 4px 10px; cursor: pointer; }
+    .sec-vivo65    { background: linear-gradient(135deg, #1a5a8a, #0d3d60); }
+    .sec-nippy     { background: linear-gradient(135deg, #1a7a6a, #0d5045); }
+    .sec-devilbiss { background: linear-gradient(135deg, #8a5a1a, #5c3a0a); }
+    .sec-trach     { background: linear-gradient(135deg, #8a1a5a, #5c0a38); }
+
+    /* ---- Section body ---- */
+    .sec-body { }
+    .sec-body.collapsed { display: none; }
+
+    /* ---- Table ---- */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+    thead th { padding: 9px 12px; text-align: left; font-size: .72rem; font-weight: 700;
+               color: #667; border-bottom: 2px solid #edf0f5; background: #f8fafc;
+               white-space: nowrap; cursor: pointer; }
+    thead th.sort-asc::after  { content: ' ▲'; color: #5a2d82; font-size: .65rem; }
+    thead th.sort-desc::after { content: ' ▼'; color: #5a2d82; font-size: .65rem; }
+    tbody tr { border-bottom: 1px solid #f0f4f8; transition: background .12s; }
+    tbody tr:hover { background: #faf8ff; }
+    td { padding: 9px 12px; vertical-align: middle; }
+
+    /* ---- Presidio name ---- */
+    .item-desc { font-weight: 600; }
+    .item-meta { font-size: .73rem; color: #8a9ab0; margin-top: 2px; }
+
+    /* ---- Qty ---- */
+    .qty-wrap { display: flex; flex-direction: column; gap: 3px; }
+    .qty-val  { font-weight: 600; }
+    .qty-sub  { font-size: .73rem; color: #8a9ab0; }
+    .quick-row { display: flex; gap: 4px; align-items: center; margin-top: 4px; }
+    .quick-lbl   { font-size: .7rem; color: #8a9ab0; }
+    .quick-input { width: 60px; padding: 3px 6px; border: 1.5px solid #cdd8e8;
+                   border-radius: 6px; font-size: .76rem; }
+
+    /* ---- Days ---- */
+    .days-num  { font-weight: 700; font-size: .92rem; }
+    .days-ok   { color: #1a7a40; }
+    .days-warn { color: #c47000; }
+    .days-crit { color: #c00000; }
+
+    /* ---- Pills ---- */
+    .pill { display: inline-block; padding: 2px 10px; border-radius: 20px;
+            font-size: .73rem; font-weight: 700; border: 1.5px solid; }
+    .pill.ok   { background: #d4f4e3; color: #1a5e38; border-color: #7ed4aa; }
+    .pill.warn { background: #fff0d4; color: #7a4500; border-color: #ffc070; }
+    .pill.crit { background: #ffe0e0; color: #8b0000; border-color: #f09090; }
+
+    /* ---- Date ---- */
+    .date-val { font-size: .78rem; color: #556; }
+
+    /* ---- Buttons ---- */
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px;
+           border-radius: 8px; border: 1.5px solid transparent; font-size: .82rem;
+           font-weight: 600; cursor: pointer; transition: all .15s; text-decoration: none; }
+    .btn-primary   { background: #5a2d82; color: white; border-color: #5a2d82; }
+    .btn-primary:hover { background: #4a2070; }
+    .btn-secondary { background: white; color: #5a2d82; border-color: #c8b0e0; }
+    .btn-secondary:hover { background: #f5f0ff; }
+    .btn-danger    { background: white; color: #c0392b; border-color: #f0a0a0; }
+    .btn-danger:hover { background: #fff0f0; }
+    .btn-sm  { padding: 4px 10px; font-size: .76rem; }
+    .btn-xs  { padding: 2px 7px;  font-size: .72rem; }
+
+    /* ---- Section footer (add + count) ---- */
+    .sec-foot { padding: 10px 16px; border-top: 1px solid #f0f4f8;
+                display: flex; justify-content: space-between; align-items: center;
+                flex-wrap: wrap; gap: 8px; }
+    .sec-count { font-size: .76rem; color: #8a9ab0; }
+
+    /* ---- Empty state ---- */
+    .empty-st { text-align: center; padding: 28px 20px; color: #8a9ab0; }
+    .empty-st .e-icon { font-size: 2rem; margin-bottom: 6px; }
+
+    /* ---- Summary card ---- */
+    .summary-inner { padding: 16px 20px; }
+    .sum-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sum-header h3 { font-size: .95rem; font-weight: 700; }
+    .sum-pills { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .sum-pill { padding: 4px 14px; border-radius: 20px; font-size: .78rem;
+                font-weight: 700; border: 1.5px solid; }
+    .sum-ok   { background: #d4f4e3; color: #1a5e38; border-color: #7ed4aa; }
+    .sum-warn { background: #fff0d4; color: #7a4500; border-color: #ffc070; }
+    .sum-crit { background: #ffe0e0; color: #8b0000; border-color: #f09090; }
+    .alert-list { font-size: .82rem; }
+    .alert-item { display: flex; align-items: baseline; gap: 6px; padding: 5px 0;
+                  border-bottom: 1px solid #f0f4f8; }
+    .alert-item:last-child { border-bottom: none; }
+
+    /* ---- Export card ---- */
+    .export-inner { padding: 16px 20px; }
+    .export-inner h3 { font-size: .95rem; font-weight: 700; margin-bottom: 12px; }
+    .export-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* ---- Readonly mode ---- */
+    .readonly-banner { display: none; background: #e8f4fd; border: 1.5px solid #74b9d8;
+                       border-radius: 10px; padding: 9px 16px; margin-bottom: 16px;
+                       font-size: .83rem; color: #1a4a6a; font-weight: 600; text-align: center; }
+    body.readonly-mode .readonly-banner { display: block; }
+    body.readonly-mode .edit-only { display: none !important; }
+
+    /* ---- Patient strip ---- */
+    .ph-strip { background: white; border-radius: 12px; padding: 12px 18px;
+                display: flex; flex-wrap: wrap; gap: 12px 28px; margin-bottom: 12px;
+                box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+    .ph-field { display: flex; flex-direction: column; gap: 2px; }
+    .ph-lbl   { font-size: .7rem; font-weight: 600; color: #8a9ab0; text-transform: uppercase; }
+    .ph-val   { font-size: .86rem; font-weight: 600; color: #2d3748; }
+
+    /* ---- Assistance strip ---- */
+    .as-strip { background: #f0f7ff; border-radius: 12px; padding: 10px 18px;
+                display: flex; flex-wrap: wrap; gap: 8px 28px; margin-bottom: 20px;
+                box-shadow: 0 1px 6px rgba(0,0,0,.06);
+                border-left: 4px solid #5a2d82; }
+    .as-title { font-size: .72rem; font-weight: 700; color: #5a2d82; text-transform: uppercase;
+                width: 100%; margin-bottom: 2px; letter-spacing: .04em; }
+    .as-field { display: flex; flex-direction: column; gap: 2px; }
+    .as-lbl   { font-size: .65rem; font-weight: 600; color: #8a9ab0; text-transform: uppercase; }
+    .as-val   { font-size: .84rem; font-weight: 600; color: #2d3748; }
+    .as-val a { color: #5a2d82; text-decoration: none; }
+    .as-val a:hover { text-decoration: underline; }
+
+    /* ---- Sync strip ---- */
+    .sync-strip { background: white; border-radius: 12px; padding: 10px 18px;
+                  margin-bottom: 18px; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+    .sync-row   { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .cloud-status { padding: 3px 10px; border-radius: 20px; font-size: .76rem; font-weight: 700; }
+    .cloud-status.ok   { background: #d4f4e3; color: #1a5e38; }
+    .cloud-status.err  { background: #ffe0e0; color: #8b0000; }
+    .cloud-status.sync { background: #fff0d4; color: #7a4500; }
+    .cloud-status.off  { background: #f0f4f8; color: #667; }
+    .cloud-setup-body  { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+    .cloud-setup-body input { padding: 6px 10px; border: 1.5px solid #cdd8e8; border-radius: 8px; font-size: .82rem; width: 200px; }
+    .cfg-link-box { margin-top: 8px; display: none; }
+    .cfg-link-box input { padding: 5px 8px; border: 1px solid #cdd8e8; border-radius: 6px; font-size: .75rem; width: 320px; max-width: 100%; }
+    .sync-ts { font-size: .72rem; color: #8a9ab0; }
+
+    /* ---- Alarm ---- */
+    .alarm-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .alarm-row label { font-size: .78rem; color: #556; font-weight: 600; }
+    .alarm-row input[type=range] { width: 100px; accent-color: #5a2d82; }
+    .alarm-row span { font-size: .78rem; font-weight: 700; color: #5a2d82; min-width: 40px; }
+
+    /* ---- Modal ---- */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.52);
+                     z-index: 9999; align-items: center; justify-content: center;
+                     padding: 16px;
+                     padding-top: max(24px, calc(env(safe-area-inset-top) + 16px));
+                     overflow-y: auto; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 14px; width: 100%; max-width: 520px;
+             box-shadow: 0 8px 32px rgba(0,0,0,.25); margin: auto; }
+    .modal-hdr { padding: 14px 18px; border-bottom: 1px solid #e8eef5;
+                 display: flex; align-items: center; justify-content: space-between;
+                 background: #5a2d82; border-radius: 14px 14px 0 0; color: white; }
+    .modal-hdr h3 { font-size: .95rem; font-weight: 700; }
+    .modal-body { padding: 20px 18px; }
+    .modal-foot { padding: 12px 18px; border-top: 1px solid #e8eef5;
+                  display: flex; gap: 10px; justify-content: flex-end; }
+    .field { margin-bottom: 13px; }
+    .field label { display: block; font-size: .76rem; font-weight: 600; color: #556; margin-bottom: 4px; }
+    .field input, .field select { width: 100%; padding: 7px 10px; border: 1.5px solid #cdd8e8;
+                                   border-radius: 8px; font-size: .86rem; }
+    .field input:focus, .field select:focus { outline: none; border-color: #8a5ac0; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ---- TXT modal ---- */
+    .txt-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+                         z-index: 9999; align-items: center; justify-content: center; padding: 16px; }
+    .txt-modal-overlay.open { display: flex; }
+    .txt-modal { background: white; border-radius: 14px; width: 100%; max-width: 680px;
+                 max-height: 90vh; display: flex; flex-direction: column;
+                 box-shadow: 0 8px 32px rgba(0,0,0,.25); }
+    .txt-modal-hdr { padding: 14px 18px; border-bottom: 1px solid #e8eef5;
+                     display: flex; align-items: center; justify-content: space-between; }
+    .txt-modal-hdr h3 { font-size: .95rem; font-weight: 700; color: #2d3748; }
+    .txt-modal-body { padding: 14px 18px; flex: 1; overflow-y: auto; }
+    .txt-modal-body textarea { width: 100%; height: 320px; font-family: 'Courier New', monospace;
+                               font-size: .74rem; border: 1.5px solid #dde5ef; border-radius: 8px;
+                               padding: 10px 12px; resize: none; background: #fafcff; line-height: 1.5; }
+    .txt-modal-foot { padding: 12px 18px; border-top: 1px solid #e8eef5;
+                      display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+    /* ---- Footer ---- */
+    footer { text-align: center; margin-top: 28px; color: #a0b0c0; font-size: .77rem; }
+    footer span { background: white; padding: 3px 14px; border-radius: 20px;
+                  box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+
+    /* ---- Print ---- */
+    .no-print { }
+    @media print {
+      .no-print { display: none !important; }
+      body > *:not(#print-area) { display: none !important; }
+      #print-area { display: block !important; padding: 10mm 14mm; font-size: 9pt; }
+    }
+    #print-area { display: none; }
+    .pr-title { font-size: 16pt; font-weight: 700; color: #5a2d82; margin-bottom: 4px; }
+    .pr-sub   { font-size: 9pt; color: #556; margin-bottom: 2px; }
+    .pr-sec   { margin-top: 14px; }
+    .pr-sec-title { font-size: 11pt; font-weight: 700; color: #2d3748;
+                    border-bottom: 1.5px solid #5a2d82; padding-bottom: 3px; margin-bottom: 6px; }
+    .pr-table { width: 100%; border-collapse: collapse; font-size: 8pt; margin-top: 4px; }
+    .pr-table th { background: #f2eff8; padding: 4px 6px; text-align: left;
+                   border: 1px solid #ccc; font-size: 7.5pt; }
+    .pr-table td { padding: 4px 6px; border: 1px solid #e0e0e0; vertical-align: top; }
+    .pr-table tr:nth-child(even) td { background: #faf8ff; }
+
+    /* ---- Mobile ---- */
+    @media (max-width: 640px) {
+      .field-row { grid-template-columns: 1fr; }
+      .export-row { flex-direction: column; }
+      .sec-hdr h2 { font-size: .85rem; }
+      td, th { padding: 7px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span class="icon">🏥</span>
+    <div>
+      <h1>Presidi e Ausili</h1>
+      <p>Gestione materiali di consumo e dispositivi medici</p>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ====== SYNC STRIP ====== -->
+  <div class="sync-strip no-print" id="sync-section">
+    <div class="sync-row">
+      <span style="font-size:.82rem;font-weight:700;color:#5a2d82;">☁️ Cloud Sync</span>
+      <span class="cloud-status off" id="cloud-status-badge">⚫ Non configurato</span>
+      <button class="btn btn-secondary btn-sm edit-only" id="btn-disconnect"
+              style="display:none" onclick="disconnectCloud()">🔌 Disconnetti</button>
+      <button class="btn btn-secondary btn-sm" id="btn-genlink"
+              style="display:none" onclick="genConfigLink()">🔗 Link modifica</button>
+      <button class="btn btn-secondary btn-sm" id="btn-genlink-ro"
+              style="display:none" onclick="genReadonlyLink()">👁️ Link sola lettura</button>
+      <span class="sync-ts" id="sync-ts"></span>
+    </div>
+    <div class="readonly-banner no-print">👁️ Modalità <strong>sola lettura</strong> — i dati si aggiornano in tempo reale ma non è possibile apportare modifiche.</div>
+    <div class="cloud-setup-body edit-only" id="cloud-setup-body">
+      <div>
+        <label style="font-size:.74rem;font-weight:600;color:#556;display:block;margin-bottom:3px;">Codice personale</label>
+        <input type="text" id="fb-code" placeholder="es. mario2024" autocapitalize="none" />
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveCloudConfig()">🔗 Connetti</button>
+    </div>
+    <div class="cfg-link-box" id="cfg-link-box">
+      <input type="text" id="cfg-link-input" readonly />
+      <button class="btn btn-secondary btn-xs" onclick="copyCfgLink()" style="margin-left:6px;">📋 Copia</button>
+    </div>
+  </div>
+
+  <!-- ====== PATIENT STRIP ====== -->
+  <div class="ph-strip no-print">
+    <div class="ph-field">
+      <span class="ph-lbl">Paziente</span>
+      <span class="ph-val" id="ph-paziente">—</span>
+    </div>
+    <div class="ph-field">
+      <span class="ph-lbl">Data nascita</span>
+      <span class="ph-val" id="ph-nascita">—</span>
+    </div>
+    <div class="ph-field">
+      <span class="ph-lbl">Codice fiscale</span>
+      <span class="ph-val" id="ph-cf">—</span>
+    </div>
+    <div class="ph-field no-print" style="margin-left:auto;">
+      <span class="ph-lbl">Soglia allerta (gg)</span>
+      <div class="alarm-row">
+        <input type="range" id="alarm-input" min="3" max="60" value="10"
+               oninput="setAlarm(this.value)" />
+        <span id="alarm-label">≤ 10 gg</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== ASSISTANCE STRIP ====== -->
+  <div class="as-strip no-print">
+    <div class="as-title">🔧 Ditta di Assistenza</div>
+    <div class="as-field">
+      <span class="as-lbl">Ditta</span>
+      <span class="as-val">VIVISOL VENTILOTERAPIA</span>
+    </div>
+    <div class="as-field">
+      <span class="as-lbl">Numero Verde</span>
+      <span class="as-val"><a href="tel:800832004">800 832 004</a></span>
+    </div>
+    <div class="as-field">
+      <span class="as-lbl">Tecnico (Stefano)</span>
+      <span class="as-val"><a href="tel:+393284945891">328 4945891</a></span>
+    </div>
+    <div class="as-field">
+      <span class="as-lbl">Ordini (Eleonora)</span>
+      <span class="as-val"><a href="tel:+393284945883">328 4945883</a></span>
+    </div>
+  </div>
+
+  <!-- ====== PDF CONFIG ====== -->
+  <div class="card no-print">
+    <div class="export-inner">
+      <h3>📤 Esporta</h3>
+      <div class="export-row" style="margin-top:10px;">
+        <button class="btn btn-primary" onclick="exportPDF()">🖨️ Stampa / PDF</button>
+        <button class="btn btn-secondary" onclick="exportTXT()">📄 Esporta TXT</button>
+        <button class="btn btn-secondary" onclick="shareContent()">📤 Condividi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== SECTION CARDS ====== -->
+  <!-- Populated by JS -->
+  <div id="sections-container"></div>
+
+  <!-- ====== SUMMARY ====== -->
+  <div class="card" id="summary-card">
+    <div class="summary-inner">
+      <div class="sum-header">
+        <span style="font-size:1.3rem;">⚠️</span>
+        <h3>Riepilogo scorte</h3>
+      </div>
+      <div class="sum-pills" id="sum-pills"></div>
+      <div class="alert-list" id="alert-list"></div>
+    </div>
+  </div>
+
+  <footer class="no-print">
+    <span>Presidi e Ausili · Aggiornato il <span id="ts-label">—</span></span>
+  </footer>
+</div>
+
+<!-- ====== MODAL: Add / Edit ====== -->
+<div class="modal-overlay" id="item-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="modal-title">➕ Nuovo articolo</h3>
+      <button class="btn btn-secondary btn-sm"
+              style="background:rgba(255,255,255,.15);color:white;border-color:rgba(255,255,255,.3);"
+              onclick="closeModal()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Sezione</label>
+        <select id="f-sec">
+          <option value="vivo65">Ventilatore Vivo65</option>
+          <option value="nippy">Macchina Tosse Nippy</option>
+          <option value="devilbiss">Aspiratore DeVilbiss New Vacu Aide (7305P-I)</option>
+          <option value="trach">Tracheostomia</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Descrizione *</label>
+        <input type="text" id="f-desc" placeholder="es. Circuito monouso" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Ditta</label>
+          <input type="text" id="f-ditta" placeholder="es. Vivisol" />
+        </div>
+        <div class="field">
+          <label>REF.</label>
+          <input type="text" id="f-ref" placeholder="es. VIV-123" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Quantità caricata</label>
+          <input type="number" id="f-qty" min="0" step="1" placeholder="0" />
+        </div>
+        <div class="field">
+          <label>Consumo</label>
+          <div style="display:flex;gap:6px;">
+            <input type="number" id="f-consumo" min="0" step="0.1" placeholder="1"
+                   style="flex:1;min-width:0;" />
+            <select id="f-consumo-unit" style="flex:1.4;min-width:0;padding:7px 6px;
+                    border:1.5px solid #cdd8e8;border-radius:8px;font-size:.82rem;">
+              <option value="die">al giorno</option>
+              <option value="settimana">a settimana</option>
+              <option value="mese">al mese</option>
+              <option value="trimestre">al trimestre</option>
+              <option value="anno">all'anno</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Data ricarica</label>
+        <input type="date" id="f-refdate" />
+      </div>
+      <div class="field">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <label style="margin-bottom:0;">📅 Date di scadenza <span style="font-weight:400;color:#aaa;font-size:.72rem;">(per lotto)</span></label>
+          <button type="button" class="btn btn-secondary btn-xs" onclick="addExpDateRow()">+ Aggiungi lotto</button>
+        </div>
+        <div id="exp-dates-container" style="min-height:24px;"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal()">Annulla</button>
+      <button class="btn btn-primary" onclick="saveItem()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL: TXT ====== -->
+<div class="txt-modal-overlay" id="txt-modal-overlay" onclick="if(event.target===this)closeTxtModal()">
+  <div class="txt-modal">
+    <div class="txt-modal-hdr">
+      <h3>📄 Presidi — Testo</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeTxtModal()">✖ Chiudi</button>
+    </div>
+    <div class="txt-modal-body">
+      <textarea id="txt-modal-content" readonly></textarea>
+    </div>
+    <div class="txt-modal-foot">
+      <button class="btn btn-secondary" onclick="copyTxtModal()">📋 Copia tutto</button>
+      <button class="btn btn-primary"   onclick="shareTxtModal()">📤 Condividi</button>
+      <button class="btn btn-secondary" onclick="closeTxtModal()">✖ Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- Print area -->
+<div id="print-area"></div>
+
+<script>
+/* ================================================
+   CONFIG
+   ================================================ */
+const STORAGE_KEY = 'presidi_v1';
+const FB_CFG_KEY  = 'farmaci_firebase_cfg';   // condiviso con farmaci/alimentazione
+const ALARM_KEY   = 'presidi_alarm_days';
+let alarmDays = parseInt(localStorage.getItem(ALARM_KEY) || '10');
+
+/* ---- Access mode ---- */
+let isReadonly = false;
+function applyReadonlyMode() { isReadonly = true; document.body.classList.add('readonly-mode'); }
+
+const SECTIONS_DEF = [
+  { id: 'vivo65',    title: 'Ventilatore Vivo65',                           icon: '🫁', clr: 'vivo65'    },
+  { id: 'nippy',     title: 'Macchina Tosse Nippy',                         icon: '💨', clr: 'nippy'     },
+  { id: 'devilbiss', title: 'Aspiratore DeVilbiss New Vacu Aide (7305P-I)', icon: '🔧', clr: 'devilbiss' },
+  { id: 'trach',     title: 'Tracheostomia',                                icon: '⚕️', clr: 'trach'     },
+];
+
+/* ================================================
+   DATA MODEL
+   ================================================ */
+let sections = { vivo65: [], nippy: [], devilbiss: [], trach: [] };
+
+// Migrazione: vecchio campo expDate singolo → expDates array (idempotente)
+function migrateExpDates(secs) {
+  SECTIONS_DEF.forEach(def => {
+    (secs[def.id] || []).forEach(item => {
+      if (!item.expDates) {
+        item.expDates = item.expDate ? [{ qty: '', expDate: item.expDate }] : [];
+      }
+      delete item.expDate; // rimuove sempre il vecchio campo
+    });
+  });
+}
+
+(function loadLocal() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if (s && typeof s === 'object') sections = { ...sections, ...s };
+  } catch(e) {}
+  migrateExpDates(sections);
+})();
+
+// Collapsed state
+const collapsed = { vivo65: false, nippy: false, devilbiss: false, trach: false };
+
+/* ================================================
+   UTILS
+   ================================================ */
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function fmtDate(s) {
+  if (!s) return '—';
+  const [y, m, d] = s.split('-');
+  return `${d}/${m}/${y}`;
+}
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ================================================
+   CALCULATIONS
+   ================================================ */
+
+// Unità di consumo e fattori di conversione in giorni
+const UNIT_DAYS  = { die: 1, settimana: 7, mese: 30, trimestre: 91, anno: 365 };
+const UNIT_SHORT = { die: '/die', settimana: '/sett.', mese: '/mese', trimestre: '/trim.', anno: '/anno' };
+const UNIT_LABEL = { die: 'al giorno', settimana: 'a settimana', mese: 'al mese', trimestre: 'al trimestre', anno: "all'anno" };
+
+// Consumo giornaliero effettivo (normalizzato)
+function getConsumoPerDay(item) {
+  if (!item.consumo || item.consumo <= 0) return 0;
+  const factor = UNIT_DAYS[item.consumoUnit] || 1;
+  return item.consumo / factor;
+}
+
+// Etichetta formattata per la visualizzazione (es. "1/sett.", "2/mese")
+function fmtConsumo(item) {
+  if (!item.consumo || item.consumo <= 0) return '—';
+  const short = UNIT_SHORT[item.consumoUnit] || '/die';
+  const val   = item.consumo % 1 === 0 ? item.consumo : item.consumo;
+  return val + short;
+}
+
+function getAvail(item) {
+  const cpd = getConsumoPerDay(item);
+  if (!cpd) return item.qty;
+  const today = new Date();
+  const ref   = new Date(item.refDate || todayStr());
+  const daysSince = Math.max(0, Math.floor((today - ref) / 86400000));
+  return Math.max(0, item.qty - cpd * daysSince);
+}
+function getDays(item) {
+  const cpd = getConsumoPerDay(item);
+  if (!cpd) return Infinity;
+  const avail = getAvail(item);
+  return avail > 0 ? Math.floor(avail / cpd) : 0;
+}
+function statusOf(days) {
+  if (!isFinite(days)) return 'ok';
+  if (days <= 3) return 'crit';
+  if (days <= alarmDays) return 'warn';
+  return 'ok';
+}
+const STATUS_LABEL = { ok: 'OK', warn: 'Attenzione', crit: 'Scorta critica' };
+
+/* ---- Expiry helpers ---- */
+function expiryStatus(expDate) {
+  if (!expDate) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const exp   = new Date(expDate); exp.setHours(0,0,0,0);
+  const diff  = Math.floor((exp - today) / 86400000);
+  if (diff < 0)   return 'crit';
+  if (diff <= 30) return 'warn';
+  return 'ok';
+}
+function expiryLabel(expDate) {
+  if (!expDate) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const exp   = new Date(expDate); exp.setHours(0,0,0,0);
+  const diff  = Math.floor((exp - today) / 86400000);
+  if (diff < 0)   return `Scad. ${fmtDate(expDate)} (${Math.abs(diff)}gg fa)`;
+  if (diff === 0) return `Scade oggi!`;
+  if (diff <= 30) return `${fmtDate(expDate)} (tra ${diff}gg)`;
+  return fmtDate(expDate);
+}
+// Stato peggiore tra tutti i lotti di un articolo (null = nessuna data)
+function itemWorstExpiry(item) {
+  const lots = (item.expDates || []).filter(l => l.expDate);
+  if (lots.length === 0) return null;
+  let worst = 'ok';
+  for (const l of lots) {
+    const st = expiryStatus(l.expDate);
+    if (st === 'crit') return 'crit';
+    if (st === 'warn') worst = 'warn';
+  }
+  return worst;
+}
+
+/* ---- Autonomia effettiva considerando le scadenze dei lotti ---- */
+// I lotti vengono consumati nell'ordine di scadenza (prima ciò che scade prima).
+// Le unità rimaste in un lotto alla sua data di scadenza vengono perse.
+function getEffectiveDays(item) {
+  if (!item.consumo || item.consumo <= 0) return Infinity;
+
+  const lots = (item.expDates || [])
+    .filter(l => l.expDate && parseFloat(l.qty) > 0)
+    .sort((a, b) => a.expDate.localeCompare(b.expDate));
+
+  // Senza lotti con quantità: usa il calcolo base (scorta totale / consumo)
+  if (lots.length === 0) return getDays(item);
+
+  const cpd = getConsumoPerDay(item);
+  if (!cpd) return Infinity;
+
+  // Algoritmo sequenziale a partire dalla refDate (giorno 0):
+  // 1. Il primo lotto viene consumato dal giorno 0.
+  // 2. Ogni lotto successivo parte dal giorno di esaurimento del precedente
+  //    (o dalla sua data di scadenza, se è scaduto prima di essere esaurito).
+  // 3. Le unità rimaste in un lotto al momento della sua scadenza vengono scartate.
+  // 4. La somma degli archi temporali di tutti i lotti dà l'autonomia complessiva.
+  const ref   = new Date(item.refDate || todayStr()); ref.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const daysSinceRef = Math.max(0, Math.floor((today - ref) / 86400000));
+
+  let currentDay = 0; // cursore in giorni dalla refDate
+
+  for (const lot of lots) {
+    const exp          = new Date(lot.expDate); exp.setHours(0,0,0,0);
+    const lotExpiryDay = Math.max(0, Math.floor((exp - ref) / 86400000));
+    const lotQty       = parseFloat(lot.qty);
+    const lotEndDay    = currentDay + lotQty / cpd;
+
+    if (lotExpiryDay <= currentDay) {
+      // Il lotto è già scaduto prima ancora di iniziare ad essere consumato
+    } else if (lotEndDay <= lotExpiryDay) {
+      // Lotto esaurito prima della scadenza: nessuno scarto
+      currentDay = lotEndDay;
+    } else {
+      // Lotto scade con unità residue: si scarta il resto, si avanza alla scadenza
+      currentDay = lotExpiryDay;
+    }
+  }
+
+  // Converti da "giorni dalla refDate" a "giorni da oggi"
+  return Math.max(0, currentDay - daysSinceRef);
+}
+
+// Data fino alla quale dura la scorta (considerando le scadenze)
+function getAutFinalDate(item) {
+  const days = getEffectiveDays(item);
+  if (!isFinite(days)) return null;
+  const d = new Date(); d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+function fmtAutDate(item) {
+  const d = getAutFinalDate(item);
+  if (!d) return null;
+  return d.toLocaleDateString('it-IT', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+/* ================================================
+   STORAGE
+   ================================================ */
+function _saveCore() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(sections)); } catch(e) {}
+  updateTimestamp();
+}
+function save() { _saveCore(); _cloudWrite(); }
+function updateTimestamp() {
+  const el = document.getElementById('ts-label');
+  if (el) el.textContent = new Date().toLocaleDateString('it-IT',
+    { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+/* ================================================
+   ALARM
+   ================================================ */
+function setAlarm(v) {
+  alarmDays = parseInt(v);
+  localStorage.setItem(ALARM_KEY, alarmDays);
+  document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+  render();
+}
+
+/* ================================================
+   BUILD SECTION CARDS (once at init)
+   ================================================ */
+function buildSectionCards() {
+  const container = document.getElementById('sections-container');
+  container.innerHTML = '';
+  SECTIONS_DEF.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = 'card-' + s.id;
+    card.innerHTML = `
+      <div class="sec-hdr sec-${s.clr}" onclick="toggleSection('${s.id}')">
+        <div class="sec-hdr-left">
+          <span class="sec-icon">${s.icon}</span>
+          <h2>${esc(s.title)}</h2>
+        </div>
+        <button class="toggle-btn no-print" id="toggle-${s.id}" onclick="event.stopPropagation();toggleSection('${s.id}')">▼</button>
+      </div>
+      <div class="sec-body" id="body-${s.id}">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Presidio / Descrizione</th>
+                <th>Qtà disp.</th>
+                <th>Consumo</th>
+                <th>Gg autonomia</th>
+                <th>Ricarica</th>
+                <th>Scadenza</th>
+                <th>Stato</th>
+                <th class="no-print">Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-${s.id}"></tbody>
+          </table>
+        </div>
+        <div class="sec-foot no-print">
+          <span class="sec-count" id="count-${s.id}">0 articoli</span>
+          <button class="btn btn-primary btn-sm edit-only" onclick="openForm('${s.id}',-1)">➕ Aggiungi articolo</button>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+/* ================================================
+   RENDER
+   ================================================ */
+function render() {
+  SECTIONS_DEF.forEach(s => renderSection(s.id));
+  updateSummary();
+}
+
+function renderSection(secId) {
+  const tbody = document.getElementById('tbody-' + secId);
+  if (!tbody) return;
+  const items = sections[secId] || [];
+  const count = document.getElementById('count-' + secId);
+  if (count) count.textContent = items.length + (items.length === 1 ? ' articolo' : ' articoli');
+
+  tbody.innerHTML = '';
+  if (items.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8">
+      <div class="empty-st">
+        <div class="e-icon">📦</div>
+        <p>Nessun articolo. Usa "Aggiungi articolo" per inserirne uno.</p>
+      </div></td></tr>`;
+    return;
+  }
+  items.forEach((item, idx) => {
+    const avail        = getAvail(item);
+    const days         = getDays(item);
+    const effDays      = getEffectiveDays(item);
+    const st           = statusOf(effDays);
+    const dDisp        = isFinite(effDays) ? effDays : '∞';
+    const dCls         = 'days-' + st;
+    const autDateStr   = fmtAutDate(item);
+    const hasWaste     = isFinite(days) && isFinite(effDays) && effDays < days;
+    const wasteDays    = hasWaste ? (days - effDays) : 0;
+    const worstExpSt = itemWorstExpiry(item);
+    const lots = (item.expDates || []).filter(l => l.expDate)
+      .sort((a, b) => a.expDate.localeCompare(b.expDate));
+    const expCell = lots.length === 0
+      ? '<span style="color:#bbb;font-size:.78rem;">—</span>'
+      : lots.map(l => {
+          const st  = expiryStatus(l.expDate);
+          const lbl = expiryLabel(l.expDate);
+          const qtyStr = l.qty !== '' && l.qty !== undefined
+            ? `<span style="font-size:.69rem;color:#667;margin-right:3px;">${l.qty}u.</span>`
+            : '';
+          return `<div style="margin-bottom:2px;white-space:nowrap;">${qtyStr}<span class="pill ${st}" style="font-size:.69rem;">${lbl}</span></div>`;
+        }).join('');
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-sec', secId);
+    tr.setAttribute('data-idx', idx);
+    if (worstExpSt === 'crit') tr.style.background = '#fff5f5';
+    else if (worstExpSt === 'warn') tr.style.background = '#fffdf0';
+    tr.innerHTML = `
+      <td>
+        <div class="item-desc">${esc(item.desc)}</div>
+        <div class="item-meta">${item.ditta ? esc(item.ditta) : ''}${item.ditta && item.ref ? ' · ' : ''}${item.ref ? 'REF: ' + esc(item.ref) : ''}</div>
+      </td>
+      <td>
+        <div class="qty-wrap">
+          <span class="qty-val">${avail % 1 === 0 ? avail : avail.toFixed(1)} u.</span>
+          <div class="quick-row no-print edit-only">
+            <span class="quick-lbl">+</span>
+            <input class="quick-input" type="number" min="0.1" step="1"
+              id="qi-${secId}-${idx}" placeholder="u."
+              onkeydown="if(event.key==='Enter')addQty('${secId}',${idx},this.value,this)" />
+            <button class="btn btn-secondary btn-xs"
+              onclick="addQty('${secId}',${idx},document.getElementById('qi-${secId}-${idx}').value,document.getElementById('qi-${secId}-${idx}'))">✓</button>
+          </div>
+        </div>
+      </td>
+      <td>${fmtConsumo(item)}</td>
+      <td>
+        <span class="days-num ${dCls}">${dDisp}</span>${isFinite(effDays) ? ' gg' : ''}
+        ${autDateStr ? `<div style="font-size:.72rem;color:#556;margin-top:1px;">fino al ${autDateStr}</div>` : ''}
+        ${hasWaste ? `<div style="font-size:.68rem;color:#c47000;margin-top:1px;" title="Riduzione per scadenza lotti">↓ ${wasteDays}gg per scad.</div>` : ''}
+      </td>
+      <td><span class="date-val">${fmtDate(item.refDate)}</span></td>
+      <td>${expCell}</td>
+      <td><span class="pill ${st}">${STATUS_LABEL[st]}</span></td>
+      <td class="no-print edit-only" style="white-space:nowrap;">
+        <button class="btn btn-secondary btn-sm" onclick="openForm('${secId}',${idx})">✏️</button>
+        <button class="btn btn-secondary btn-sm" onclick="duplicateItem('${secId}',${idx})" style="margin-left:4px;" title="Duplica articolo">📋</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('${secId}',${idx})" style="margin-left:4px;">🗑️</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ================================================
+   SUMMARY
+   ================================================ */
+function updateSummary() {
+  let okN = 0, warnN = 0, critN = 0;
+  let expiredN = 0, expSoonN = 0;
+  const alertItems = [];
+  const expAlerts  = [];
+  SECTIONS_DEF.forEach(s => {
+    (sections[s.id] || []).forEach(item => {
+      const days    = getDays(item);
+      const effDays = getEffectiveDays(item);
+      const st      = statusOf(effDays);
+      if (st === 'ok')   okN++;
+      if (st === 'warn') { warnN++; alertItems.push({ item, secTitle: s.title, days: effDays, st }); }
+      if (st === 'crit') { critN++; alertItems.push({ item, secTitle: s.title, days: effDays, st }); }
+      // Scadenze per lotto
+      (item.expDates || []).filter(l => l.expDate).forEach(lot => {
+        const expSt = expiryStatus(lot.expDate);
+        if (expSt === 'crit') { expiredN++; expAlerts.push({ item, secTitle: s.title, expSt, lot }); }
+        if (expSt === 'warn') { expSoonN++; expAlerts.push({ item, secTitle: s.title, expSt, lot }); }
+      });
+    });
+  });
+  const pills = document.getElementById('sum-pills');
+  const list  = document.getElementById('alert-list');
+  if (pills) {
+    let pillsHtml = `
+      <span class="sum-pill sum-ok">✅ Scorte OK: ${okN}</span>
+      <span class="sum-pill sum-warn">⚠️ Attenzione: ${warnN}</span>
+      <span class="sum-pill sum-crit">🔴 Critici: ${critN}</span>`;
+    if (expiredN > 0)
+      pillsHtml += `<span class="sum-pill sum-crit">📅 Scaduti: ${expiredN}</span>`;
+    if (expSoonN > 0)
+      pillsHtml += `<span class="sum-pill sum-warn">📅 In scadenza: ${expSoonN}</span>`;
+    pills.innerHTML = pillsHtml;
+  }
+  if (list) {
+    const allAlerts = [];
+    if (alertItems.length > 0) {
+      alertItems.sort((a,b) => a.days - b.days);
+      allAlerts.push('<div style="font-size:.75rem;font-weight:700;color:#667;margin:6px 0 3px;">SCORTE</div>');
+      allAlerts.push(...alertItems.map(({ item, secTitle, days, st }) => `
+        <div class="alert-item">
+          <span class="pill ${st}" style="font-size:.68rem;padding:1px 8px;">${STATUS_LABEL[st]}</span>
+          <span><strong>${esc(item.desc)}</strong> <span style="color:#8a9ab0;font-size:.78rem;">(${esc(secTitle)})</span>
+          — ${isFinite(days) ? days + ' gg' : '∞'}</span>
+        </div>`));
+    }
+    if (expAlerts.length > 0) {
+      allAlerts.push('<div style="font-size:.75rem;font-weight:700;color:#667;margin:10px 0 3px;">SCADENZE</div>');
+      expAlerts.sort((a,b) => {
+        const da = new Date(a.lot.expDate||'9999'); const db = new Date(b.lot.expDate||'9999');
+        return da - db;
+      });
+      allAlerts.push(...expAlerts.map(({ item, secTitle, expSt, lot }) => {
+        const qtyStr = lot.qty !== '' && lot.qty !== undefined ? ` — ${lot.qty} u.` : '';
+        return `
+        <div class="alert-item">
+          <span class="pill ${expSt}" style="font-size:.68rem;padding:1px 8px;">${expSt === 'crit' ? '📅 Scaduto' : '📅 In scadenza'}</span>
+          <span><strong>${esc(item.desc)}</strong> <span style="color:#8a9ab0;font-size:.78rem;">(${esc(secTitle)})</span>
+          — ${expiryLabel(lot.expDate)}${qtyStr}</span>
+        </div>`;
+      }));
+    }
+    if (allAlerts.length === 0) {
+      list.innerHTML = '<span style="color:#1a7a40;font-size:.82rem;">✅ Tutte le scorte sono nella norma e nessun prodotto è in scadenza.</span>';
+    } else {
+      list.innerHTML = allAlerts.join('');
+    }
+  }
+}
+
+/* ================================================
+   TOGGLE SECTION
+   ================================================ */
+function toggleSection(secId) {
+  const body   = document.getElementById('body-' + secId);
+  const toggle = document.getElementById('toggle-' + secId);
+  if (!body) return;
+  collapsed[secId] = !collapsed[secId];
+  body.classList.toggle('collapsed', collapsed[secId]);
+  if (toggle) toggle.textContent = collapsed[secId] ? '▶' : '▼';
+}
+
+/* ================================================
+   CRUD
+   ================================================ */
+let _editSec = null;
+let _editIdx = -1;
+let _editExpDates = [];
+
+/* ---- Lotti scadenza nel form ---- */
+function renderExpDateRows() {
+  const c = document.getElementById('exp-dates-container');
+  if (!c) return;
+  if (_editExpDates.length === 0) {
+    c.innerHTML = '<div style="color:#aaa;font-size:.76rem;padding:3px 0;">Nessun lotto inserito.</div>';
+    return;
+  }
+  c.innerHTML = _editExpDates.map((lot, i) => `
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
+      <input type="number" min="0" step="1" value="${lot.qty !== undefined ? lot.qty : ''}" placeholder="Qtà"
+        style="width:68px;padding:5px 7px;border:1.5px solid #cdd8e8;border-radius:7px;font-size:.83rem;"
+        oninput="updateExpRow(${i},'qty',this.value)" />
+      <span style="font-size:.76rem;color:#667;flex-shrink:0;">u. →</span>
+      <input type="date" value="${lot.expDate || ''}"
+        style="flex:1;padding:5px 7px;border:1.5px solid #cdd8e8;border-radius:7px;font-size:.83rem;"
+        onchange="updateExpRow(${i},'expDate',this.value)" />
+      <button type="button" onclick="removeExpRow(${i})"
+        style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:1.2rem;padding:0 2px;line-height:1;"
+        title="Rimuovi lotto">×</button>
+    </div>`).join('');
+}
+function addExpDateRow()    { _editExpDates.push({ qty: '', expDate: '' }); renderExpDateRows(); }
+function removeExpRow(i)    { _editExpDates.splice(i, 1); renderExpDateRows(); }
+function updateExpRow(i, f, v) {
+  _editExpDates[i][f] = f === 'qty' ? (v === '' ? '' : parseFloat(v) || 0) : v;
+}
+
+function openForm(secId, idx) {
+  if (isReadonly) return;
+  _editSec = secId;
+  _editIdx = idx;
+  const item  = idx >= 0 ? sections[secId][idx] : null;
+  document.getElementById('modal-title').textContent = idx >= 0 ? '✏️ Modifica articolo' : '➕ Nuovo articolo';
+  document.getElementById('f-sec').value     = secId;
+  document.getElementById('f-desc').value    = item ? item.desc    : '';
+  document.getElementById('f-ditta').value   = item ? item.ditta   : '';
+  document.getElementById('f-ref').value     = item ? item.ref     : '';
+  document.getElementById('f-qty').value     = item ? item.qty     : '';
+  document.getElementById('f-consumo').value      = item ? item.consumo      : '1';
+  document.getElementById('f-consumo-unit').value = item ? (item.consumoUnit || 'die') : 'die';
+  document.getElementById('f-refdate').value = item ? item.refDate : todayStr();
+  _editExpDates = item ? JSON.parse(JSON.stringify(item.expDates || [])) : [];
+  renderExpDateRows();
+  // Se si cambia sezione dal modal, aggiorna _editSec
+  document.getElementById('f-sec').onchange = function() { _editSec = this.value; };
+  document.getElementById('item-modal').classList.add('open');
+  setTimeout(() => document.getElementById('f-desc').focus(), 80);
+}
+
+function closeModal() {
+  document.getElementById('item-modal').classList.remove('open');
+}
+
+function saveItem() {
+  const desc    = document.getElementById('f-desc').value.trim();
+  if (!desc) { alert('La Descrizione è obbligatoria.'); return; }
+  const secId   = document.getElementById('f-sec').value;
+  const newItem = {
+    desc,
+    ditta:   document.getElementById('f-ditta').value.trim(),
+    ref:     document.getElementById('f-ref').value.trim(),
+    qty:         parseFloat(document.getElementById('f-qty').value) || 0,
+    consumo:     parseFloat(document.getElementById('f-consumo').value) || 0,
+    consumoUnit: document.getElementById('f-consumo-unit').value || 'die',
+    refDate:  document.getElementById('f-refdate').value || todayStr(),
+    expDates: _editExpDates.filter(l => l.expDate)
+  };
+  if (!sections[secId]) sections[secId] = [];
+  if (_editIdx >= 0 && _editSec === secId) {
+    sections[secId][_editIdx] = newItem;
+  } else if (_editIdx >= 0 && _editSec !== secId) {
+    // spostato di sezione
+    sections[_editSec].splice(_editIdx, 1);
+    sections[secId].push(newItem);
+  } else {
+    sections[secId].push(newItem);
+  }
+  save();
+  render();
+  closeModal();
+}
+
+function deleteItem(secId, idx) {
+  const item = sections[secId][idx];
+  if (!confirm(`Eliminare "${item.desc}"?`)) return;
+  sections[secId].splice(idx, 1);
+  save();
+  render();
+}
+
+function duplicateItem(secId, idx) {
+  const orig = sections[secId][idx];
+  const copy = { ...orig, qty: 0, refDate: todayStr(),
+                 expDates: JSON.parse(JSON.stringify(orig.expDates || [])) };
+  sections[secId].splice(idx + 1, 0, copy);
+  save();
+  render();
+  openForm(secId, idx + 1);
+}
+
+function addQty(secId, idx, val, inputEl) {
+  const v = parseFloat(val);
+  if (isNaN(v) || v <= 0) { alert('Inserisci un numero valido (> 0).'); return; }
+  const item  = sections[secId][idx];
+  const avail = getAvail(item);
+  item.qty     = Math.round((avail + v) * 100) / 100;
+  item.refDate = todayStr();
+  save();
+  if (inputEl) inputEl.value = '';
+  renderSection(secId);
+  updateSummary();
+}
+
+/* ================================================
+   EXPORT — PDF
+   ================================================ */
+function exportPDF() {
+  const oggi = new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' });
+  const paz  = document.getElementById('ph-paziente').textContent;
+  const cf   = document.getElementById('ph-cf').textContent;
+  let html = `<div class="pr-title">🏥 Presidi e Ausili</div>
+    <div class="pr-sub">Paziente: ${esc(paz)} &nbsp;|&nbsp; C.F.: ${esc(cf)} — Generato il ${oggi}</div>
+    <div class="pr-sub" style="margin-top:4px;color:#5a2d82;font-weight:600;">
+      Assistenza: VIVISOL VENTILOTERAPIA — N.V. 800 832 004 &nbsp;|&nbsp; Tecnico (Stefano): 328 4945891 &nbsp;|&nbsp; Ordini (Eleonora): 328 4945883
+    </div>`;
+  SECTIONS_DEF.forEach(s => {
+    const items = sections[s.id] || [];
+    html += `<div class="pr-sec">
+      <div class="pr-sec-title">${s.icon} ${esc(s.title)}</div>`;
+    if (items.length === 0) {
+      html += '<p style="font-size:10px;color:#888;">Nessun articolo.</p>';
+    } else {
+      html += `<table class="pr-table">
+        <thead><tr>
+          <th>Descrizione</th><th>Ditta</th><th>REF.</th>
+          <th>Qtà disp.</th><th>Consumo</th><th>Gg aut.</th><th>Aut. fino al</th><th>Ricarica</th><th>Scadenza</th><th>Stato</th>
+        </tr></thead><tbody>`;
+      items.forEach(item => {
+        const avail    = getAvail(item);
+        const days     = getDays(item);
+        const effDays  = getEffectiveDays(item);
+        const hasWaste = isFinite(days) && isFinite(effDays) && effDays < days;
+        const wasteDays = hasWaste ? (days - effDays) : 0;
+        const st       = statusOf(effDays);
+        const lotsHtml = (item.expDates || []).filter(l => l.expDate)
+          .sort((a,b) => a.expDate.localeCompare(b.expDate))
+          .map(l => {
+            const expSt = expiryStatus(l.expDate);
+            const clr = expSt === 'crit' ? '#c00000' : expSt === 'warn' ? '#c47000' : '#444';
+            const fw  = expSt ? '700' : '400';
+            const qtyStr = l.qty !== '' && l.qty !== undefined ? `${l.qty}u. → ` : '';
+            return `<div style="color:${clr};font-weight:${fw};white-space:nowrap;">${qtyStr}${expiryLabel(l.expDate)}</div>`;
+          }).join('') || '—';
+        html += `<tr>
+          <td><strong>${esc(item.desc)}</strong></td>
+          <td>${esc(item.ditta)}</td>
+          <td>${esc(item.ref)}</td>
+          <td>${avail % 1 === 0 ? avail : avail.toFixed(1)} u.</td>
+          <td>${fmtConsumo(item)}</td>
+          <td><strong>${isFinite(effDays) ? effDays : '∞'}</strong> gg${hasWaste ? ` <span style="color:#c47000;font-size:7pt;">(↓${wasteDays}gg)</span>` : ''}</td>
+          <td>${fmtAutDate(item) || '—'}</td>
+          <td>${fmtDate(item.refDate)}</td>
+          <td>${lotsHtml}</td>
+          <td>${STATUS_LABEL[st]}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+  });
+  const printArea = document.getElementById('print-area');
+  printArea.innerHTML = html;
+  printArea.style.display = 'block';
+  window.print();
+  printArea.style.display = 'none';
+  printArea.innerHTML = '';
+}
+
+/* ================================================
+   EXPORT — TXT
+   ================================================ */
+function exportTXT() {
+  const oggi = new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' });
+  const paz  = document.getElementById('ph-paziente').textContent;
+  const cf   = document.getElementById('ph-cf').textContent;
+  const DLINE = '═'.repeat(72);
+  const LINE  = '─'.repeat(72);
+  const lbl = (k, v) => v ? `  ${(k+':').padEnd(12)} ${v}\n` : '';
+
+  let txt = DLINE + '\n';
+  txt += '  PRESIDI E AUSILI\n';
+  txt += DLINE + '\n';
+  txt += `  Paziente : ${paz}\n`;
+  txt += `  C.F.     : ${cf}\n`;
+  txt += `  Generato : ${oggi}\n`;
+  txt += DLINE + '\n';
+  txt += `  Assistenza: VIVISOL VENTILOTERAPIA\n`;
+  txt += `  N. Verde  : 800 832 004\n`;
+  txt += `  Tecnico   : Stefano 328 4945891\n`;
+  txt += `  Ordini    : Eleonora 328 4945883\n`;
+  txt += DLINE + '\n';
+
+  SECTIONS_DEF.forEach(s => {
+    const items = sections[s.id] || [];
+    txt += `\n${LINE}\n  ${s.title}\n${LINE}\n`;
+    if (items.length === 0) { txt += '  (nessun articolo)\n'; return; }
+    items.forEach((item, i) => {
+      const avail    = getAvail(item);
+      const days     = getDays(item);
+      const effDays  = getEffectiveDays(item);
+      const hasWaste = isFinite(days) && isFinite(effDays) && effDays < days;
+      const st       = statusOf(effDays);
+      const cons     = fmtConsumo(item);
+      const ggStr    = isFinite(effDays) ? effDays + ' gg' : '∞';
+      const autDate  = fmtAutDate(item);
+      txt += `\n  ${i + 1}. ${item.desc}\n`;
+      txt += lbl('Ditta',    item.ditta);
+      txt += lbl('REF.',     item.ref);
+      txt += lbl('Qtà disp.', (avail % 1 === 0 ? avail : avail.toFixed(1)) + ' unità');
+      txt += lbl('Consumo',   cons);
+      txt += lbl('Gg aut.',  ggStr + (hasWaste ? ` (ridotto di ${days-effDays}gg per scadenze)` : '') + '  [' + STATUS_LABEL[st] + ']');
+      txt += lbl('Aut. fino al', autDate || '—');
+      txt += lbl('Ricarica', fmtDate(item.refDate));
+      const validLots = (item.expDates || []).filter(l => l.expDate)
+        .sort((a,b) => a.expDate.localeCompare(b.expDate));
+      if (validLots.length > 0) {
+        const pad = ' '.repeat(14);
+        validLots.forEach((l, li) => {
+          const expSt  = expiryStatus(l.expDate);
+          const expFlag = expSt === 'crit' ? ' ⚠ SCADUTO' : expSt === 'warn' ? ' ⚠ IN SCADENZA' : '';
+          const qtyStr = l.qty !== '' && l.qty !== undefined ? `${l.qty}u. → ` : '';
+          if (li === 0) txt += lbl('Scadenza', qtyStr + fmtDate(l.expDate) + expFlag);
+          else          txt += pad + qtyStr + fmtDate(l.expDate) + expFlag + '\n';
+        });
+      }
+    });
+    txt += '\n';
+  });
+
+  // Riepilogo allerte
+  const alerts = [];
+  SECTIONS_DEF.forEach(s => {
+    (sections[s.id] || []).forEach(item => {
+      const days = getDays(item);
+      if (statusOf(days) !== 'ok') alerts.push({ item, sec: s.title, days });
+    });
+  });
+  if (alerts.length > 0) {
+    txt += '\n' + DLINE + '\n  DA RIFORNIRE\n' + DLINE + '\n';
+    alerts.sort((a,b) => a.days - b.days);
+    alerts.forEach(({ item, sec, days }) => {
+      txt += `  • ${item.desc} (${sec}) — ${isFinite(days) ? days + ' gg' : '∞'}\n`;
+    });
+    txt += DLINE + '\n';
+  }
+
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (isMobile) {
+    document.getElementById('txt-modal-content').value = txt;
+    document.getElementById('txt-modal-overlay').classList.add('open');
+  } else {
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `presidi_${todayStr()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+}
+
+function closeTxtModal() {
+  document.getElementById('txt-modal-overlay').classList.remove('open');
+}
+function copyTxtModal() {
+  const ta = document.getElementById('txt-modal-content');
+  navigator.clipboard.writeText(ta.value).catch(() => { ta.select(); document.execCommand('copy'); });
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✔ Copiato!';
+  setTimeout(() => btn.textContent = orig, 2000);
+}
+function shareTxtModal() {
+  const txt = document.getElementById('txt-modal-content').value;
+  if (navigator.share) {
+    navigator.share({ title: 'Presidi e Ausili', text: txt }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(txt).catch(() => {});
+    alert('Contenuto copiato negli appunti.');
+  }
+}
+
+/* ================================================
+   SHARE
+   ================================================ */
+function shareContent() {
+  exportTXT();
+}
+
+/* ================================================
+   FIREBASE CLOUD SYNC
+   ================================================ */
+const FB_BASE_CFG = {
+  apiKey:            "AIzaSyCj5u6pMaXPJhrkFYLbNPCStbF3taMTU7c",
+  authDomain:        "farmaci-ca400.firebaseapp.com",
+  projectId:         "farmaci-ca400",
+  storageBucket:     "farmaci-ca400.firebasestorage.app",
+  messagingSenderId: "938882299940",
+  appId:             "1:938882299940:web:a9a712860941c4741700b1"
+};
+let cloudCode    = null;
+let cloudPollId  = null;
+let cloudLastWrite = 0;
+
+function fsUrl(code) {
+  return `https://firestore.googleapis.com/v1/projects/${FB_BASE_CFG.projectId}`
+       + `/databases/(default)/documents/presidi/${encodeURIComponent(code)}`
+       + `?key=${FB_BASE_CFG.apiKey}`;
+}
+function setCloudStatus(cls, text) {
+  const el = document.getElementById('cloud-status-badge');
+  if (el) { el.className = `cloud-status ${cls}`; el.textContent = text; }
+}
+function loadFbCfg() {
+  try { return JSON.parse(localStorage.getItem(FB_CFG_KEY) || 'null'); } catch(e) { return null; }
+}
+async function _cloudRead(code) {
+  const res = await fetch(fsUrl(code));
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const doc = await res.json();
+  const str = doc.fields?.payload?.stringValue;
+  return str ? JSON.parse(str) : null;
+}
+async function _cloudWrite() {
+  if (!cloudCode || isReadonly) return;
+  try {
+    cloudLastWrite = Date.now();
+    await fetch(fsUrl(cloudCode), {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          payload:  { stringValue: JSON.stringify({ sections, alarmDays }) },
+          savedAt:  { stringValue: new Date().toISOString() }
+        }
+      })
+    });
+    setCloudStatus('ok', '✅ Sincronizzato');
+  } catch(e) {
+    setCloudStatus('err', '⛔ Errore scrittura');
+  }
+}
+async function _cloudPoll() {
+  if (!cloudCode) return;
+  try {
+    const remote = await _cloudRead(cloudCode);
+    if (!remote || typeof remote.sections !== 'object') return;
+    const savedAt = remote.savedAt ? new Date(remote.savedAt).getTime() : 0;
+    if (savedAt <= cloudLastWrite + 2000) return;
+    sections  = { ...sections, ...remote.sections };
+    migrateExpDates(sections);
+    alarmDays = remote.alarmDays || alarmDays;
+    _saveCore();
+    render();
+    document.getElementById('alarm-input').value       = alarmDays;
+    document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+    cloudLastWrite = Date.now();
+    setCloudStatus('ok', '✅ Sincronizzato');
+  } catch(e) { /* silent */ }
+}
+function _cloudConnected(code) {
+  const label = isReadonly ? '👁️ Sola lettura — ' + code : '✅ Cloud attivo — ' + code;
+  setCloudStatus(isReadonly ? 'sync' : 'ok', label);
+  if (!isReadonly) document.getElementById('btn-disconnect').style.display = '';
+  document.getElementById('btn-genlink').style.display    = '';
+  document.getElementById('btn-genlink-ro').style.display = '';
+  document.getElementById('cloud-setup-body').style.display = 'none';
+  if (cloudPollId) clearInterval(cloudPollId);
+  cloudPollId = setInterval(_cloudPoll, 30000);
+}
+async function initCloud(personalCode) {
+  cloudCode = personalCode.trim();
+  if (!cloudCode) { alert('Inserisci il Codice personale.'); return; }
+  setCloudStatus('sync', '🔄 Connessione…');
+  try {
+    const remote = await _cloudRead(cloudCode);
+    if (remote && typeof remote.sections === 'object') {
+      sections  = { ...sections, ...remote.sections };
+      migrateExpDates(sections);
+      alarmDays = remote.alarmDays || alarmDays;
+      _saveCore();
+      await _cloudWrite();
+      render();
+      document.getElementById('alarm-input').value       = alarmDays;
+      document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+    } else {
+      await _cloudWrite();
+    }
+    cloudLastWrite = Date.now();
+    localStorage.setItem(FB_CFG_KEY, JSON.stringify({ personalCode: cloudCode }));
+    _cloudConnected(cloudCode);
+  } catch(e) {
+    setCloudStatus('err', '⛔ Errore: ' + e.message);
+  }
+}
+function saveCloudConfig() {
+  const code = document.getElementById('fb-code').value.trim();
+  if (!code) { alert('Inserisci il Codice personale.'); return; }
+  initCloud(code);
+}
+function genConfigLink() {
+  if (!cloudCode) return;
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify({ personalCode: cloudCode, mode: 'edit' }))));
+  const base    = window.location.href.split('#')[0];
+  document.getElementById('cfg-link-input').value = base + '#fbcfg=' + encoded;
+  document.getElementById('cfg-link-box').style.display = '';
+}
+function genReadonlyLink() {
+  if (!cloudCode) return;
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify({ personalCode: cloudCode, mode: 'readonly' }))));
+  const base    = window.location.href.split('#')[0];
+  document.getElementById('cfg-link-input').value = base + '#fbcfg=' + encoded;
+  document.getElementById('cfg-link-box').style.display = '';
+}
+function copyCfgLink() {
+  const inp = document.getElementById('cfg-link-input');
+  inp.select();
+  navigator.clipboard.writeText(inp.value).catch(() => {});
+  const btn = inp.nextElementSibling;
+  const orig = btn.textContent;
+  btn.textContent = '✔ Copiato!';
+  setTimeout(() => btn.textContent = orig, 2000);
+}
+function checkCfgFromHash() {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#fbcfg=')) return null;
+  try {
+    const json = decodeURIComponent(escape(atob(hash.slice(7))));
+    const cfg  = JSON.parse(json);
+    if (!cfg.personalCode) return null;
+    if (cfg.mode !== 'readonly') history.replaceState(null, '', window.location.pathname);
+    return cfg;
+  } catch(e) { return null; }
+}
+function disconnectCloud() {
+  if (cloudPollId) { clearInterval(cloudPollId); cloudPollId = null; }
+  cloudCode = null;
+  localStorage.removeItem(FB_CFG_KEY);
+  setCloudStatus('off', '⚫ Non configurato');
+  document.getElementById('btn-disconnect').style.display  = 'none';
+  document.getElementById('btn-genlink').style.display     = 'none';
+  document.getElementById('cfg-link-box').style.display    = 'none';
+  document.getElementById('cloud-setup-body').style.display = '';
+}
+
+/* ================================================
+   INIT
+   ================================================ */
+buildSectionCards();
+render();
+updateTimestamp();
+
+// Valori predefiniti paziente
+(function initDefaults() {
+  const paz = document.getElementById('ph-paziente');
+  const nas = document.getElementById('ph-nascita');
+  const cf  = document.getElementById('ph-cf');
+  if (paz) paz.textContent = 'Alessandro PREVIATI';
+  if (nas) nas.textContent = '12/11/1992';
+  if (cf)  cf.textContent  = 'PRVLSN92S12D548Q';
+  document.getElementById('alarm-input').value       = alarmDays;
+  document.getElementById('alarm-label').textContent = `≤ ${alarmDays} gg`;
+})();
+
+// Auto-connessione cloud (codice predefinito: AlePrev1992)
+(function autoInitCloud() {
+  const DEFAULT_CODE = 'AlePrev1992';
+  const fromHash = checkCfgFromHash();
+  const resolved = fromHash || loadFbCfg();
+  const code = (resolved && resolved.personalCode) ? resolved.personalCode : DEFAULT_CODE;
+  if (resolved && resolved.mode === 'readonly') applyReadonlyMode();
+  document.getElementById('fb-code').value = code;
+  initCloud(code);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ventilatore VIVO 65 — Impostazioni</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      color: #1a2a3a;
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #1a6fa8, #0d4c7a);
+      color: white;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      flex-wrap: wrap;
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    header .icon { font-size: 1.5rem; }
+    header h1   { font-size: 1.1rem; font-weight: 700; }
+    header p    { font-size: 0.78rem; opacity: 0.85; margin-top: 1px; }
+    .header-right { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 14px 16px; }
+
+    /* Toolbar */
+    .toolbar {
+      background: white;
+      border-radius: 8px;
+      padding: 6px 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+    .toolbar-left  { display: flex; align-items: center; gap: 8px; color: #667; }
+    .last-save     { font-size: 0.75rem; color: #9aabb0; }
+
+    /* Sezioni */
+    .section {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .section-header {
+      background: #f5f8fc;
+      padding: 6px 16px;
+      border-bottom: 1.5px solid #e8eef5;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-header h2 {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #1a6fa8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .section-header .badge {
+      font-size: 0.7rem;
+      background: #e0eeff;
+      color: #1a6fa8;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    /* Tabella dati */
+    table { width: 100%; border-collapse: collapse; }
+    tr { border-bottom: 1px solid #f0f4f8; }
+    tr:last-child { border-bottom: none; }
+    tr:hover { background: #f8fbff; }
+    td {
+      padding: 4px 16px;
+      font-size: 0.83rem;
+      vertical-align: middle;
+    }
+    td.param {
+      color: #4a5a6a;
+      width: 52%;
+      font-weight: 500;
+    }
+    td.val { font-size: 0.85rem; }
+
+    /* Celle editabili */
+    .editable-cell {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      border-radius: 5px;
+      padding: 2px 5px;
+      transition: background 0.15s;
+      min-height: 22px;
+    }
+    .editable-cell:hover { background: #edf4ff; }
+    .editable-cell .val-text { font-weight: 700; color: #1a2a3a; }
+    .editable-cell .unit { font-weight: 400; color: #8a9ab0; font-size: 0.8rem; }
+    .editable-cell .edit-icon { font-size: 0.7rem; color: #b0c0d0; opacity: 0; transition: opacity 0.15s; }
+    .editable-cell:hover .edit-icon { opacity: 1; }
+
+    /* Inline input */
+    .inline-input {
+      border: 1.5px solid #1a6fa8;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #1a2a3a;
+      background: white;
+      width: 90px;
+    }
+    .inline-input:focus { outline: none; }
+    .inline-input.wide { width: 160px; }
+
+    /* Toggle On/Off */
+    .toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border: none;
+      transition: all 0.18s;
+      user-select: none;
+    }
+    .toggle-btn.on  { background: #d4f4e3; color: #1a7a44; }
+    .toggle-btn.on:hover  { background: #beecd4; }
+    .toggle-btn.off { background: #f0f4f8; color: #8a9ab0; }
+    .toggle-btn.off:hover { background: #e0e8f0; }
+
+    /* Select opzioni */
+    .option-select {
+      padding: 4px 10px;
+      border: 1.5px solid #d0d8e4;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: #fafcff;
+      color: #1a2a3a;
+      cursor: pointer;
+    }
+    .option-select:focus { outline: none; border-color: #1a6fa8; }
+
+    /* Chip modalità */
+    .mode-row { padding: 6px 16px; border-bottom: 1px solid #f0f4f8; }
+    .mode-row:last-child { border-bottom: none; }
+    .mode-label {
+      font-size: 0.7rem; color: #8a9ab0; text-transform: uppercase;
+      letter-spacing: 0.4px; margin-bottom: 4px; font-weight: 600;
+    }
+    .mode-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip {
+      padding: 3px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1.5px solid #d0d8e4;
+      color: #8a9ab0;
+      background: #f5f8fc;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip:hover { border-color: #1a6fa8; color: #1a6fa8; background: #edf4ff; }
+    .chip.selected {
+      background: #1a6fa8;
+      color: white;
+      border-color: #1a6fa8;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 7px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-primary   { background: #1a6fa8; color: white; }
+    .btn-primary:hover   { background: #155d8e; }
+    .btn-secondary { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); }
+    .btn-secondary:hover { background: rgba(255,255,255,0.3); }
+    .btn-danger    { background: #fde8e8; color: #c0392b; }
+    .btn-danger:hover { background: #f9d0d0; }
+    .btn-light { background: #e8eef5; color: #1a6fa8; }
+    .btn-light:hover { background: #d4dfe9; }
+
+    /* Save flash */
+    .save-flash {
+      font-size: 0.75rem;
+      color: #2e9e5b;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .save-flash.show { opacity: 1; }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 12px;
+      color: #a0b0c0;
+      font-size: 0.75rem;
+    }
+    footer span {
+      background: white;
+      padding: 3px 14px;
+      border-radius: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    /* Modale TXT */
+    .txt-modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      z-index: 9999; align-items: center; justify-content: center; padding: 16px;
+    }
+    .txt-modal-overlay.open { display: flex; }
+    .txt-modal {
+      background: white; border-radius: 14px; width: 100%; max-width: 680px;
+      max-height: 90vh; display: flex; flex-direction: column;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+    }
+    .txt-modal-header {
+      padding: 14px 18px; border-bottom: 1px solid #e8eef5;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .txt-modal-header h3 { font-size: 0.95rem; font-weight: 700; color: #1a2a3a; }
+    .txt-modal-body { padding: 14px 18px; flex: 1; overflow-y: auto; }
+    .txt-modal-body textarea {
+      width: 100%; height: 380px; font-family: 'Courier New', monospace;
+      font-size: 0.75rem; border: 1.5px solid #dde5ef; border-radius: 8px;
+      padding: 10px 12px; resize: none; background: #fafcff; color: #1a2a3a;
+      line-height: 1.5;
+    }
+    .txt-modal-footer {
+      padding: 12px 18px; border-top: 1px solid #e8eef5;
+      display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;
+    }
+    .btn-txt {
+      background: #e8f0ff; color: #1a4a8a; border: none; border-radius: 7px;
+      padding: 6px 13px; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-txt:hover { opacity: .85; }
+
+    /* Cloud */
+    .cloud-card {
+      background: white; border-radius: 8px; padding: 12px 16px;
+      margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.07);
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    }
+    .cloud-status {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px;
+      border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+    }
+    .cloud-status.ok   { background: #c6f6d5; color: #276749; }
+    .cloud-status.sync { background: #bee3f8; color: #2b6cb0; }
+    .cloud-status.err  { background: #fed7d7; color: #9b2c2c; }
+    .cloud-status.off  { background: #e8eef5; color: #718096; }
+    .cloud-input {
+      border: 1.5px solid #c8d8e8; border-radius: 8px; padding: 5px 10px;
+      font-size: 0.82rem; width: 190px;
+    }
+
+    /* Pannello PDF */
+    .pdf-bar {
+      background: white;
+      border-radius: 8px;
+      padding: 8px 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      display: flex;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pdf-bar .field { display: flex; flex-direction: column; gap: 2px; }
+    .pdf-bar .field label { font-size: 0.67rem; font-weight: 700; color: #556; text-transform: uppercase; letter-spacing: 0.4px; }
+    .pdf-bar .field input {
+      border: 1.5px solid #d0d8e4; border-radius: 6px;
+      padding: 4px 8px; font-size: 0.82rem; background: #fafcff; color: #1a2a3a;
+      width: 165px;
+    }
+    .pdf-bar .field input:focus { outline: none; border-color: #1a6fa8; }
+    .pdf-bar .field input.narrow { width: 100px; }
+    .pdf-note { font-size: 0.75rem; color: #9aabb0; margin-top: 2px; }
+
+    /* Intestazione stampa */
+    .print-header { display: none; }
+    .print-footer { display: none; }
+
+    /* Print */
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { background: white; font-size: 7.5pt; }
+      .toolbar, .pdf-bar, header .header-right { display: none !important; }
+      header { display: none !important; }
+
+      .print-header {
+        display: block !important;
+        margin-bottom: 6pt;
+        padding-bottom: 5pt;
+        border-bottom: 1.5pt solid #1a6fa8;
+      }
+      .ph-title  { font-size: 11pt; font-weight: bold; color: #1a6fa8; margin-bottom: 2pt; }
+      .ph-sub    { font-size: 7pt; color: #555; margin-bottom: 4pt; }
+      .ph-grid   { display: flex; gap: 16pt; font-size: 7.5pt; flex-wrap: wrap; }
+      .ph-field  { display: flex; flex-direction: column; gap: 1pt; }
+      .ph-lbl    { font-size: 6pt; text-transform: uppercase; color: #888; letter-spacing: 0.3pt; }
+      .ph-val    { font-weight: 700; font-size: 8pt; border-bottom: 0.5pt solid #bbb; min-width: 60pt; padding-bottom: 1pt; }
+
+      .print-footer {
+        display: flex !important;
+        justify-content: space-between;
+        margin-top: 5pt;
+        padding-top: 3pt;
+        border-top: 0.5pt solid #ccc;
+        font-size: 6.5pt;
+        color: #999;
+      }
+
+      .section { box-shadow: none; border: 0.75pt solid #d0d8e0; margin-bottom: 5pt; break-inside: avoid; }
+      .section-header { background: #e8f0f8 !important; padding: 3pt 9pt; }
+      .section-header h2 { font-size: 7pt; }
+      td { padding: 1.5pt 8pt; font-size: 7.5pt; line-height: 1.3; }
+      tr { border-bottom: 0.5pt solid #f0f4f8; }
+      .chip { padding: 1pt 6pt; font-size: 7pt; border-width: 0.75pt; }
+      .edit-icon { display: none !important; }
+      .editable-cell { cursor: default; padding: 0; min-height: unset; }
+      .editable-cell:hover { background: transparent; }
+      .val-text { font-weight: 700; }
+      .toggle-btn { padding: 1pt 6pt; font-size: 7pt; }
+      .option-select { font-size: 7pt; padding: 1pt 4pt; border: 0.5pt solid #ccc; }
+      .mode-row { padding: 3pt 8pt; }
+      .mode-label { font-size: 6.5pt; margin-bottom: 2pt; }
+      .mode-chips { gap: 4pt; }
+      @page { size: A4; margin: 10mm 12mm; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="icon">🫁</div>
+    <div>
+      <h1>Ventilatore Polmonare — VIVO 65</h1>
+      <p>Impostazioni e informazioni dispositivo</p>
+    </div>
+  </div>
+  <div class="header-right no-print">
+    <button class="btn btn-secondary" onclick="resetDefaults()">↺ Ripristina predefiniti</button>
+    <button class="btn btn-secondary" onclick="window.print()">🖨️ Stampa</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Intestazione stampa (visibile solo in PDF) -->
+  <div class="print-header" id="print-header">
+    <div class="ph-title">Ventilatore Polmonare VIVO 65 — Impostazioni</div>
+    <div class="ph-sub">Documento generato per uso clinico / domiciliare</div>
+    <div class="ph-grid">
+      <div class="ph-field"><span class="ph-lbl">Paziente</span>        <span class="ph-val" id="ph-paz">—</span></div>
+      <div class="ph-field"><span class="ph-lbl">Nato il</span>         <span class="ph-val" id="ph-ddn">—</span></div>
+      <div class="ph-field"><span class="ph-lbl">Codice fiscale</span>  <span class="ph-val" id="ph-cf-paz">—</span></div>
+      <div class="ph-field"><span class="ph-lbl">N. serie</span>        <span class="ph-val" id="ph-sn">K260341</span></div>
+      <div class="ph-field"><span class="ph-lbl">Data rilevazione</span><span class="ph-val" id="ph-data">—</span></div>
+      <div class="ph-field"><span class="ph-lbl">Struttura / MMG</span> <span class="ph-val" id="ph-str">—</span></div>
+      <div class="ph-field"><span class="ph-lbl">Medico MMG</span>      <span class="ph-val" id="ph-mmg">—</span></div>
+    </div>
+  </div>
+  <div class="print-footer">
+    <span>VIVO 65 · Firmware 5.03 · Documento generato automaticamente</span>
+    <span id="pf-date">—</span>
+  </div>
+
+  <!-- Pannello Esporta PDF -->
+  <div class="pdf-bar no-print">
+    <div style="font-size:0.88rem;font-weight:700;color:#1a6fa8;white-space:nowrap;align-self:center;">📄 Esporta PDF</div>
+    <div class="field">
+      <label>Paziente</label>
+      <input type="text" id="pdf-paz" value="Alessandro PREVIATI" oninput="updatePH()" />
+    </div>
+    <div class="field">
+      <label>Data di nascita</label>
+      <input type="text" id="pdf-ddn" value="12/11/1992" style="width:100px" oninput="updatePH()" />
+    </div>
+    <div class="field">
+      <label>Codice fiscale paziente</label>
+      <input type="text" id="pdf-cf-paz" value="PRVLSN92S12D548Q" oninput="updatePH()" style="width:175px;text-transform:uppercase;" />
+    </div>
+    <div class="field">
+      <label>Data rilevazione</label>
+      <input type="date" id="pdf-data" class="narrow" style="width:140px" oninput="updatePH()" />
+    </div>
+    <div class="field">
+      <label>Struttura / MMG</label>
+      <input type="text" id="pdf-str" placeholder="es. ASST Cremona" oninput="updatePH()" />
+    </div>
+    <div class="field">
+      <label>Medico MMG</label>
+      <input type="text" id="pdf-mmg" value="dott.ssa BORTOLOTTI Maria Cristina" style="width:220px" oninput="updatePH()" />
+    </div>
+    <div style="align-self:flex-end;display:flex;flex-direction:column;gap:6px;">
+      <button class="btn btn-primary" onclick="exportPDF()" style="white-space:nowrap;">📥 Genera PDF</button>
+      <button class="btn-txt" onclick="exportTXT()" style="white-space:nowrap;">📄 Esporta TXT</button>
+      <div class="pdf-note">Seleziona "Salva come PDF" nella finestra di stampa</div>
+    </div>
+  </div>
+
+  <!-- Cloud sync -->
+  <div class="cloud-card no-print">
+    <span style="font-weight:700;font-size:0.85rem;">☁️ Sincronizzazione Cloud</span>
+    <span id="cloud-status-badge" class="cloud-status off">⚫ Non configurato</span>
+    <button class="btn-txt" id="btn-disconnect" style="display:none;" onclick="disconnectCloud()">✖ Disconnetti</button>
+    <button class="btn-txt" id="btn-genlink"    style="display:none;" onclick="genConfigLink()">🔗 Genera link</button>
+    <div id="cloud-setup-body" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <input class="cloud-input" id="fb-code" placeholder="Codice personale…"/>
+      <button class="btn btn-primary btn-sm" style="padding:5px 12px;font-size:0.8rem;" onclick="saveCloudConfig()">Connetti</button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar no-print">
+    <div class="toolbar-left">
+      💡 Clicca su qualsiasi valore per modificarlo &nbsp;·&nbsp;
+      i dati On/Off si attivano con un click
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="save-flash" id="save-flash">✔ Salvato</span>
+      <span class="last-save" id="last-save">—</span>
+    </div>
+  </div>
+
+  <div id="app"></div>
+
+  <footer>
+    <span id="footer-text">VIVO 65 · S/N K260341 · Firmware 5.03</span>
+  </footer>
+
+</div>
+
+<script>
+/* ================================================
+   DATI PREDEFINITI
+   ================================================ */
+const DEFAULTS = {
+  modalita: {
+    ventilazione: { opts: ['Pressione','Volume','CPAP'],              sel: 0 },
+    respirazione: { opts: ['Supporto','MPV','Assist./Contr.','SIMV'], sel: 0 },
+    paziente:     { opts: ['Adulti','Pediatrico'],                    sel: 0 },
+    ventilatore:  { opts: ['Clinico','Domiciliare'],                  sel: 0 },
+  },
+  info: [
+    { label: 'Ore funzionamento ventilatore', value: '9744',    unit: 'h',   type: 'number'   },
+    { label: 'Versione firmware',             value: '5.03',    unit: '',    type: 'text'     },
+    { label: 'Pacchetto lingua',              value: 'IT',      unit: '',    type: 'text'     },
+    { label: 'Versione lingua',               value: '5.03',    unit: '',    type: 'text'     },
+    { label: '~ AC (alimentazione rete)',     value: 'On',      unit: '',    type: 'onoff'    },
+    { label: '= DC esterna',                  value: '0.0',     unit: 'V',   type: 'number'   },
+    { label: 'Numero di serie',               value: 'K260341', unit: '',    type: 'text'     },
+  ],
+  imp1: [
+    { label: 'Pressione inspiratoria (Pinsp)', value: '21.0', unit: 'cmH₂O', type: 'number' },
+    { label: 'PEEP',                           value: '5.0',  unit: 'cmH₂O', type: 'number' },
+    { label: 'PScalc',                         value: '—',    unit: '',      type: 'text'   },
+    { label: 'Tempo di salita',                value: '3',    unit: '',      type: 'number' },
+    { label: 'Trigger inspiratorio',           value: '4',    unit: '',      type: 'number' },
+    { label: 'Trigger espiratorio',            value: '6',    unit: '',      type: 'number' },
+    { label: 'Tempo minimo inspiratorio',      value: 'Off',  unit: '',      type: 'onoff'  },
+    { label: 'Tempo massimo inspiratorio',     value: 'Off',  unit: '',      type: 'onoff'  },
+    { label: 'Frequenza assistita',            value: '12',   unit: 'bpm',   type: 'number' },
+    { label: 'Tempo inspiratorio assistito',   value: '0.9',  unit: 's',     type: 'number' },
+    { label: 'Volume garantito',               value: '440',  unit: 'ml',    type: 'number' },
+    { label: 'Pressione massima',              value: '21.0', unit: 'cmH₂O', type: 'number' },
+    { label: 'Pressione minima',               value: '18.0', unit: 'cmH₂O', type: 'number' },
+  ],
+  imp2: [
+    { label: 'Sospiro',           value: 'Off',  unit: '',      type: 'onoff'  },
+    { label: 'Frequenza sospiro', value: '100',  unit: '',      type: 'number' },
+    { label: '% sospiri',         value: '125',  unit: '%',     type: 'number' },
+    { label: 'Sospiro calcolato', value: '26.0', unit: 'cmH₂O', type: 'number' },
+  ],
+  allarme1: [
+    { label: 'Alta pressione',          value: '30.0', unit: 'cmH₂O', type: 'number'  },
+    { label: 'Bassa pressione',         value: '8.0',  unit: 'cmH₂O', type: 'number'  },
+    { label: 'Vte elevato',             value: '1200', unit: 'ml',    type: 'number'  },
+    { label: 'Vte ridotto',             value: '350',  unit: 'ml',    type: 'number'  },
+    { label: 'Alta frequenza resp.',    value: 'Off',  unit: '',      type: 'onoff'   },
+    { label: 'Bassa frequenza resp.',   value: '8',    unit: 'bpm',   type: 'number'  },
+    { label: 'MVe elevato',             value: 'Off',  unit: '',      type: 'onoff'   },
+    { label: 'MVe ridotto',             value: 'Off',  unit: '',      type: 'onoff'   },
+    { label: 'Apnea',                   value: 'Off',  unit: '',      type: 'onoff'   },
+    { label: 'Disconnessione',          value: 'On',   unit: '',      type: 'onoff'   },
+    { label: 'Rebreathing',             value: 'Off',  unit: '',      type: 'onoff'   },
+    { label: 'Ostruzione',              value: 'Alta', unit: '',      type: 'options',
+      opts: ['Off','Bassa','Alta'] },
+  ],
+  allarme2: [
+    { label: 'PEEP alta',                value: 'Off', unit: '',   type: 'onoff'  },
+    { label: 'PEEP bassa',               value: 'Off', unit: '',   type: 'onoff'  },
+    { label: 'Alta SpO₂',               value: 'Off', unit: '',   type: 'onoff'  },
+    { label: 'Bassa SpO₂',              value: '85',  unit: '%',  type: 'number' },
+    { label: 'Alta frequenza cardiaca',  value: 'Off', unit: '',   type: 'onoff'  },
+    { label: 'Bassa frequenza cardiaca', value: 'Off', unit: '',   type: 'onoff'  },
+    { label: 'Alta FiO₂',               value: 'Off', unit: '',   type: 'onoff'  },
+    { label: 'Bassa FiO₂',              value: 'Off', unit: '',   type: 'onoff'  },
+    { label: 'Alta EtCO₂',              value: '51',  unit: 'mmHg', type: 'number' },
+    { label: 'Bassa EtCO₂',             value: 'Off', unit: '',   type: 'onoff'  },
+    { label: 'Alta CO₂ inspiratoria',   value: 'Off', unit: '',   type: 'onoff'  },
+  ],
+  impVent: [
+    { label: 'Illuminazione display',     value: 'On',    unit: '',       type: 'onoff'  },
+    { label: 'Luminosità',               value: '2',     unit: '',       type: 'number' },
+    { label: 'Livello allarme acustico',  value: '2',     unit: '',       type: 'number' },
+    { label: 'Unità di pressione',        value: 'cmH₂O', unit: '',      type: 'options',
+      opts: ['cmH₂O','mbar','hPa'] },
+    { label: 'Unità CO₂',               value: 'mmHg',  unit: '',       type: 'options',
+      opts: ['mmHg','kPa','%'] },
+    { label: 'Blocco automatico tastiera', value: 'Off', unit: '',       type: 'onoff'  },
+  ],
+};
+
+const STORAGE_KEY = 'vivo65_settings_v1';
+let state = null;
+
+/* ================================================
+   PERSISTENZA
+   ================================================ */
+function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { state = JSON.parse(raw); return; }
+  } catch(e) {}
+  state = deepClone(DEFAULTS);
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  const now = new Date().toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
+  const el = document.getElementById('last-save');
+  if (el) el.textContent = 'Salvato alle ' + now;
+  const fl = document.getElementById('save-flash');
+  if (fl) {
+    fl.classList.add('show');
+    setTimeout(() => fl.classList.remove('show'), 1800);
+  }
+  updateFooter();
+  _cloudWrite();
+}
+
+/* ================================================
+   CLOUD SYNC
+   ================================================ */
+const FB_CFG_KEY  = 'farmaci_fb_cfg_v1';
+const FB_API_KEY  = 'AIzaSyCj5u6pMaXPJhrkFYLbNPCStbF3taMTU7c';
+const FB_PROJECT  = 'farmaci-ca400';
+let cloudCode      = null;
+let cloudLastWrite = 0;
+let cloudPollId    = null;
+
+function fsUrl(code) {
+  return `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}`
+       + `/databases/(default)/documents/ventilatore/${encodeURIComponent(code)}`
+       + `?key=${FB_API_KEY}`;
+}
+async function _cloudRead(code) {
+  const res = await fetch(fsUrl(code));
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const doc = await res.json();
+  const str = doc.fields?.payload?.stringValue;
+  return str ? JSON.parse(str) : null;
+}
+async function _cloudWrite() {
+  if (!cloudCode || !state) return;
+  try {
+    cloudLastWrite = Date.now();
+    await fetch(fsUrl(cloudCode), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          payload: { stringValue: JSON.stringify(state) },
+          savedAt: { stringValue: new Date().toISOString() }
+        }
+      })
+    });
+  } catch(e) { console.warn('Cloud write error:', e); }
+}
+async function _cloudPoll() {
+  if (!cloudCode) return;
+  try {
+    const data = await _cloudRead(cloudCode);
+    if (!data) return;
+    const savedAt = data.savedAt ? new Date(data.savedAt).getTime() : 0;
+    if (savedAt <= cloudLastWrite + 2000) return;
+    state = data;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+    renderApp();
+    updatePH();
+    cloudLastWrite = Date.now();
+    setCloudStatus('ok', '✅ Sincronizzato');
+  } catch(e) { /* silenzioso */ }
+}
+function _cloudConnected(code) {
+  setCloudStatus('ok', '✅ Cloud attivo — ' + code);
+  document.getElementById('btn-disconnect').style.display = '';
+  document.getElementById('btn-genlink').style.display    = '';
+  document.getElementById('cloud-setup-body').style.display = 'none';
+  if (cloudPollId) clearInterval(cloudPollId);
+  cloudPollId = setInterval(_cloudPoll, 30000);
+}
+async function initCloud(personalCode) {
+  cloudCode = personalCode.trim();
+  if (!cloudCode) { alert('Inserisci il Codice personale.'); return; }
+  setCloudStatus('sync', '🔄 Connessione…');
+  try {
+    const data = await _cloudRead(cloudCode);
+    if (data && data.modalita) {
+      state = data;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+      await _cloudWrite();
+      renderApp();
+      updatePH();
+    } else {
+      await _cloudWrite();
+    }
+    cloudLastWrite = Date.now();
+    localStorage.setItem(FB_CFG_KEY, JSON.stringify({ personalCode: cloudCode }));
+    _cloudConnected(cloudCode);
+  } catch(e) {
+    setCloudStatus('err', '⛔ Errore: ' + e.message);
+  }
+}
+function saveCloudConfig() {
+  const code = document.getElementById('fb-code').value.trim();
+  if (!code) { alert('Inserisci il Codice personale.'); return; }
+  initCloud(code);
+}
+function disconnectCloud() {
+  if (cloudPollId) { clearInterval(cloudPollId); cloudPollId = null; }
+  cloudCode = null;
+  try { localStorage.removeItem(FB_CFG_KEY); } catch(e) {}
+  setCloudStatus('off', '⚫ Non configurato');
+  document.getElementById('btn-disconnect').style.display = 'none';
+  document.getElementById('btn-genlink').style.display    = 'none';
+  document.getElementById('cloud-setup-body').style.display = '';
+}
+function setCloudStatus(type, msg) {
+  const el = document.getElementById('cloud-status-badge');
+  if (!el) return;
+  el.className = 'cloud-status ' + type;
+  el.textContent = msg;
+}
+function genConfigLink() {
+  if (!cloudCode) return;
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify({ personalCode: cloudCode }))));
+  const url = location.href.split('#')[0] + '#fbcfg=' + encoded;
+  navigator.clipboard.writeText(url)
+    .then(() => alert('Link copiato! Incollalo su un altro dispositivo.'))
+    .catch(() => prompt('Copia questo link:', url));
+}
+function autoConnectFromHash() {
+  const hash = location.hash;
+  if (!hash.startsWith('#fbcfg=')) return false;
+  try {
+    const cfg = JSON.parse(decodeURIComponent(escape(atob(hash.slice(7)))));
+    if (cfg.personalCode) {
+      document.getElementById('fb-code').value = cfg.personalCode;
+      initCloud(cfg.personalCode);
+      history.replaceState(null, '', location.pathname);
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+function autoConnectFromStorage() {
+  try {
+    const raw = localStorage.getItem(FB_CFG_KEY);
+    if (!raw) return false;
+    const cfg = JSON.parse(raw);
+    if (cfg.personalCode) {
+      document.getElementById('fb-code').value = cfg.personalCode;
+      initCloud(cfg.personalCode);
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+function resetDefaults() {
+  if (!confirm('Ripristinare tutti i valori predefiniti del 18/03/2026?')) return;
+  state = deepClone(DEFAULTS);
+  saveState();
+  renderApp();
+}
+
+function updateFooter() {
+  const sn  = state.info.find(r => r.label === 'Numero di serie')?.value || '—';
+  const fw  = state.info.find(r => r.label === 'Versione firmware')?.value || '—';
+  const el  = document.getElementById('footer-text');
+  if (el) el.textContent = `VIVO 65 · S/N ${sn} · Firmware ${fw}`;
+}
+
+/* ================================================
+   RENDER
+   ================================================ */
+function renderApp() {
+  document.getElementById('app').innerHTML = `
+    ${renderModalita()}
+    ${renderSection('② Info ventilatore', 'info', null)}
+    ${renderSection('③ Impostazioni', 'imp1', '1 di 2')}
+    ${renderSection('④ Impostazioni — Sospiro', 'imp2', '2 di 2')}
+    ${renderSection('⑤ Impostazioni di allarme', 'allarme1', '1 di 3')}
+    ${renderSection('⑥ Impostazioni di allarme', 'allarme2', '2 di 3')}
+    ${renderSection('⑦ Impostazioni ventilatore', 'impVent', null)}
+  `;
+  attachEvents();
+  updateFooter();
+}
+
+function renderModalita() {
+  const m = state.modalita;
+  const groups = [
+    { key:'ventilazione', label:'Modalità di ventilazione' },
+    { key:'respirazione', label:'Modalità di respirazione' },
+    { key:'paziente',     label:'Modalità paziente'        },
+    { key:'ventilatore',  label:'Modalità ventilatore'     },
+  ];
+  const rows = groups.map(g => {
+    const chips = m[g.key].opts.map((o, i) =>
+      `<span class="chip ${i === m[g.key].sel ? 'selected' : ''}"
+        data-group="${g.key}" data-idx="${i}">${o}</span>`
+    ).join('');
+    return `<div class="mode-row">
+      <div class="mode-label">${g.label}</div>
+      <div class="mode-chips">${chips}</div>
+    </div>`;
+  }).join('');
+  return `<div class="section">
+    <div class="section-header"><h2>① Modalità</h2></div>
+    ${rows}
+  </div>`;
+}
+
+function renderSection(title, key, badge) {
+  const rows = state[key].map((row, i) => {
+    const cell = renderCell(key, i, row);
+    return `<tr>
+      <td class="param">${row.label}</td>
+      <td class="val">${cell}</td>
+    </tr>`;
+  }).join('');
+  const badgeHtml = badge ? `<span class="badge">${badge}</span>` : '';
+  return `<div class="section">
+    <div class="section-header"><h2>${title}</h2>${badgeHtml}</div>
+    <table><tbody>${rows}</tbody></table>
+  </div>`;
+}
+
+function renderCell(key, idx, row) {
+  const id = `cell-${key}-${idx}`;
+  if (row.type === 'onoff') {
+    const isOn = row.value === 'On';
+    return `<button class="toggle-btn ${isOn ? 'on' : 'off'}" id="${id}"
+      data-key="${key}" data-idx="${idx}" onclick="toggleOnOff(this)">
+      ${isOn ? '● On' : '○ Off'}
+    </button>`;
+  }
+  if (row.type === 'options') {
+    const opts = row.opts.map(o =>
+      `<option value="${o}" ${o === row.value ? 'selected' : ''}>${o}</option>`
+    ).join('');
+    return `<select class="option-select" id="${id}"
+      data-key="${key}" data-idx="${idx}" onchange="changeOption(this)">
+      ${opts}
+    </select>`;
+  }
+  // number / text
+  const unit = row.unit ? `<span class="unit">${row.unit}</span>` : '';
+  return `<div class="editable-cell" id="${id}"
+    data-key="${key}" data-idx="${idx}" onclick="startEdit(this)">
+    <span class="val-text">${row.value}</span>
+    ${unit}
+    <span class="edit-icon">✏️</span>
+  </div>`;
+}
+
+/* ================================================
+   INTERAZIONI
+   ================================================ */
+function attachEvents() {
+  // Chip click
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const g   = chip.dataset.group;
+      const idx = parseInt(chip.dataset.idx);
+      state.modalita[g].sel = idx;
+      saveState();
+      renderApp();
+    });
+  });
+}
+
+function toggleOnOff(btn) {
+  const key = btn.dataset.key;
+  const idx = parseInt(btn.dataset.idx);
+  const cur = state[key][idx].value;
+  state[key][idx].value = cur === 'On' ? 'Off' : 'On';
+  saveState();
+  // Aggiorna solo il bottone senza ri-renderizzare tutto
+  const isOn = state[key][idx].value === 'On';
+  btn.className = `toggle-btn ${isOn ? 'on' : 'off'}`;
+  btn.textContent = isOn ? '● On' : '○ Off';
+}
+
+function changeOption(sel) {
+  const key = sel.dataset.key;
+  const idx = parseInt(sel.dataset.idx);
+  state[key][idx].value = sel.value;
+  saveState();
+}
+
+function startEdit(cell) {
+  const key  = cell.dataset.key;
+  const idx  = parseInt(cell.dataset.idx);
+  const row  = state[key][idx];
+  const wide = row.type === 'text';
+
+  cell.innerHTML = `
+    <input class="inline-input ${wide ? 'wide' : ''}" type="${row.type === 'number' ? 'text' : 'text'}"
+      value="${row.value}"
+      onblur="commitEdit(this,'${key}',${idx})"
+      onkeydown="if(event.key==='Enter')this.blur(); if(event.key==='Escape')cancelEdit('${key}',${idx});"
+    />
+    ${row.unit ? `<span class="unit">${row.unit}</span>` : ''}
+  `;
+  cell.querySelector('input').focus();
+  cell.querySelector('input').select();
+}
+
+function commitEdit(input, key, idx) {
+  const val = input.value.trim() || state[key][idx].value;
+  state[key][idx].value = val;
+  saveState();
+  // Ri-renderizza solo la cella
+  const cell = document.getElementById(`cell-${key}-${idx}`);
+  if (cell) cell.outerHTML = renderCell(key, idx, state[key][idx]).replace(
+    '<div class="editable-cell"',
+    `<div class="editable-cell" id="cell-${key}-${idx}"`
+  );
+  // Re-attach click senza ri-renderizzare tutto
+  const newCell = document.getElementById(`cell-${key}-${idx}`);
+  if (newCell) newCell.addEventListener('click', function() { startEdit(this); });
+}
+
+function cancelEdit(key, idx) {
+  const cell = document.getElementById(`cell-${key}-${idx}`);
+  if (!cell) return;
+  const row = state[key][idx];
+  const unit = row.unit ? `<span class="unit">${row.unit}</span>` : '';
+  cell.innerHTML = `<span class="val-text">${row.value}</span>${unit}<span class="edit-icon">✏️</span>`;
+}
+
+/* ================================================
+   ESPORTA PDF
+   ================================================ */
+function updatePH() {
+  const paz   = document.getElementById('pdf-paz').value.trim()    || '—';
+  const ddn   = document.getElementById('pdf-ddn').value.trim()    || '—';
+  const str   = document.getElementById('pdf-str').value.trim()    || '—';
+  const cfPaz = (document.getElementById('pdf-cf-paz').value.trim().toUpperCase()) || '—';
+  const mmg   = document.getElementById('pdf-mmg').value.trim()    || '—';
+  const raw   = document.getElementById('pdf-data').value;
+  const data  = raw ? new Date(raw).toLocaleDateString('it-IT') : new Date().toLocaleDateString('it-IT');
+  const oggi  = new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' });
+  const sn    = state?.info?.find(r => r.label === 'Numero di serie')?.value || 'K260341';
+
+  document.getElementById('ph-paz').textContent    = paz;
+  document.getElementById('ph-ddn').textContent    = ddn;
+  document.getElementById('ph-cf-paz').textContent = cfPaz;
+  document.getElementById('ph-str').textContent    = str;
+  document.getElementById('ph-mmg').textContent    = mmg;
+  document.getElementById('ph-data').textContent   = data;
+  document.getElementById('ph-sn').textContent     = sn;
+  document.getElementById('pf-date').textContent   = 'Generato il ' + oggi;
+}
+
+function exportPDF() {
+  updatePH();
+  setTimeout(() => window.print(), 120);
+}
+
+/* ================================================
+   AVVIO
+   ================================================ */
+loadState();
+renderApp();
+updatePH();
+
+// Mostra data ultimo salvataggio
+const raw = localStorage.getItem(STORAGE_KEY);
+if (raw) {
+  const el = document.getElementById('last-save');
+  if (el) el.textContent = 'Dati caricati da memoria locale';
+}
+
+// Auto-connessione cloud
+if (!autoConnectFromHash()) autoConnectFromStorage();
+/* ================================================
+   ESPORTA TXT
+   ================================================ */
+function exportTXT() {
+  updatePH();
+  const paz   = document.getElementById('pdf-paz').value.trim()    || '—';
+  const ddn   = document.getElementById('pdf-ddn').value.trim()    || '—';
+  const cfPaz = document.getElementById('pdf-cf-paz').value.trim().toUpperCase() || '—';
+  const mmg   = document.getElementById('pdf-mmg').value.trim()    || '—';
+  const str   = document.getElementById('pdf-str').value.trim()    || '—';
+  const rawD  = document.getElementById('pdf-data').value;
+  const dataR = rawD ? new Date(rawD).toLocaleDateString('it-IT') : new Date().toLocaleDateString('it-IT');
+  const oggi  = new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' });
+  const sn    = state?.info?.find(r => r.label === 'Numero di serie')?.value || 'K260341';
+  const fw    = state?.info?.find(r => r.label === 'Versione firmware')?.value || '5.03';
+
+  const LINE  = '─'.repeat(70);
+  const DLINE = '═'.repeat(70);
+  const pad   = (s, n) => String(s).padEnd(n);
+
+  let txt = '';
+  txt += DLINE + '\n';
+  txt += '  VENTILATORE VIVO 65 — IMPOSTAZIONI\n';
+  txt += `  Paziente:  ${paz}  |  Nato il: ${ddn}  |  CF: ${cfPaz}\n`;
+  txt += `  MMG:       ${mmg}\n`;
+  txt += `  Struttura: ${str}\n`;
+  txt += `  N. serie:  ${sn}  |  Firmware: ${fw}  |  Data rilevazione: ${dataR}\n`;
+  txt += DLINE + '\n\n';
+
+  // Modalità
+  txt += '① MODALITÀ\n' + LINE + '\n';
+  const mLabels = { ventilazione:'Modalità ventilazione', respirazione:'Modalità respirazione',
+                    paziente:'Modalità paziente', ventilatore:'Modalità ventilatore' };
+  for (const [k, lbl] of Object.entries(mLabels)) {
+    const m = state.modalita[k];
+    txt += pad(lbl + ':', 32) + m.opts[m.sel] + '\n';
+  }
+  txt += '\n';
+
+  // Sezioni tabellari
+  const sections = [
+    { key: 'info',     title: '② INFO VENTILATORE' },
+    { key: 'imp1',     title: '③ IMPOSTAZIONI (1 di 2)' },
+    { key: 'imp2',     title: '④ IMPOSTAZIONI — SOSPIRO (2 di 2)' },
+    { key: 'allarme1', title: '⑤ IMPOSTAZIONI DI ALLARME (1 di 3)' },
+    { key: 'allarme2', title: '⑥ IMPOSTAZIONI DI ALLARME (2 di 3)' },
+    { key: 'impVent',  title: '⑦ IMPOSTAZIONI VENTILATORE' },
+  ];
+  sections.forEach(s => {
+    if (!state[s.key]) return;
+    txt += s.title + '\n' + LINE + '\n';
+    state[s.key].forEach(row => {
+      txt += pad(row.label + ':', 38) + row.value + (row.unit ? ' ' + row.unit : '') + '\n';
+    });
+    txt += '\n';
+  });
+
+  txt += DLINE + '\n';
+  txt += `  Generato il ${oggi}\n`;
+  txt += DLINE + '\n';
+
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    document.getElementById('txt-modal-content').value = txt;
+    document.getElementById('txt-modal-overlay').classList.add('open');
+  } else {
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `vivo65_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+}
+function closeTxtModal() {
+  document.getElementById('txt-modal-overlay').classList.remove('open');
+}
+function copyTxtModal() {
+  const ta = document.getElementById('txt-modal-content');
+  ta.select();
+  document.execCommand('copy');
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✅ Copiato!';
+  setTimeout(() => btn.textContent = orig, 1800);
+}
+async function shareTxtModal() {
+  const txt = document.getElementById('txt-modal-content').value;
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'VIVO 65 — Impostazioni',
+        text: txt,
+      });
+    } catch(e) { if (e.name !== 'AbortError') alert('Condivisione non riuscita.'); }
+  } else {
+    const ta = document.getElementById('txt-modal-content');
+    ta.select();
+    document.execCommand('copy');
+    alert('Condivisione non disponibile su questo browser — testo copiato negli appunti.');
+  }
+}
+</script>
+
+<!-- Modale TXT (mobile) -->
+<div class="txt-modal-overlay" id="txt-modal-overlay" onclick="if(event.target===this)closeTxtModal()">
+  <div class="txt-modal">
+    <div class="txt-modal-header">
+      <h3>📄 VIVO 65 — Impostazioni</h3>
+      <button class="btn-txt" onclick="closeTxtModal()">✖ Chiudi</button>
+    </div>
+    <div class="txt-modal-body">
+      <textarea id="txt-modal-content" readonly></textarea>
+    </div>
+    <div class="txt-modal-footer">
+      <button class="btn-txt" onclick="copyTxtModal()">📋 Copia tutto</button>
+      <button class="btn btn-primary" onclick="shareTxtModal()">📤 Condividi</button>
+      <button class="btn-txt" onclick="closeTxtModal()">✖ Chiudi</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestione Sanitaria — Alessandro PREVIATI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+           background: #f2eff8; min-height: 100vh; color: #2d3748; }
+
+    header { background: linear-gradient(135deg, #5a2d82, #3a1a5c); color: white;
+             padding: 24px 28px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+    header .icon { font-size: 2.2rem; }
+    header h1   { font-size: 1.6rem; font-weight: 700; letter-spacing: .3px; }
+    header p    { font-size: .88rem; opacity: .85; margin-top: 4px; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 36px 16px; }
+
+    .ph-strip { background: white; border-radius: 14px; padding: 14px 20px;
+                display: flex; flex-wrap: wrap; gap: 12px 32px; margin-bottom: 32px;
+                box-shadow: 0 2px 10px rgba(0,0,0,.07); }
+    .ph-field { display: flex; flex-direction: column; gap: 2px; }
+    .ph-lbl   { font-size: .7rem; font-weight: 700; color: #8a9ab0; text-transform: uppercase; letter-spacing: .04em; }
+    .ph-val   { font-size: .9rem; font-weight: 700; color: #2d3748; }
+
+    .section-title { font-size: .78rem; font-weight: 700; color: #8a9ab0;
+                     text-transform: uppercase; letter-spacing: .06em;
+                     margin-bottom: 14px; padding-left: 4px; }
+
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+             gap: 18px; }
+
+    .app-card { background: white; border-radius: 16px;
+                box-shadow: 0 2px 14px rgba(0,0,0,.08);
+                overflow: hidden; text-decoration: none; color: inherit;
+                display: flex; flex-direction: column;
+                transition: transform .15s, box-shadow .15s; }
+    .app-card:hover { transform: translateY(-3px); box-shadow: 0 6px 22px rgba(0,0,0,.13); }
+
+    .card-hdr { padding: 20px 22px 16px; color: white; }
+    .card-icon { font-size: 2rem; margin-bottom: 8px; }
+    .card-hdr h2 { font-size: 1.05rem; font-weight: 700; }
+    .card-hdr p  { font-size: .78rem; opacity: .88; margin-top: 4px; line-height: 1.4; }
+
+    .h-purple { background: linear-gradient(135deg, #5a2d82, #3a1a5c); }
+    .h-blue   { background: linear-gradient(135deg, #1a5a8a, #0d3d60); }
+    .h-teal   { background: linear-gradient(135deg, #1a6b8a, #0d4060); }
+    .h-orange { background: linear-gradient(135deg, #b05a10, #7a3a08); }
+    .h-green  { background: linear-gradient(135deg, #2a7a4a, #1a5030); }
+    .h-red    { background: linear-gradient(135deg, #b01a1a, #7a0d0d); }
+
+    .card-body { padding: 14px 22px 18px; flex: 1; display: flex;
+                 flex-direction: column; justify-content: flex-end; }
+    .card-foot { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .card-tag  { display: inline-block; padding: 3px 10px; border-radius: 20px;
+                 font-size: .72rem; font-weight: 700; }
+    .t-purple { background: #f2eff8; color: #5a2d82; }
+    .t-blue   { background: #e8f0f8; color: #1a5a8a; }
+    .t-teal   { background: #e8f4f8; color: #1a6b8a; }
+    .t-orange { background: #fdf2e8; color: #b05a10; }
+    .t-green  { background: #e8f5ee; color: #2a7a4a; }
+    .t-red    { background: #fdf0f0; color: #b01a1a; }
+    .card-arrow { margin-left: auto; font-size: 1.1rem; opacity: .35; }
+
+    footer { text-align: center; margin-top: 40px; color: #a0b0c0; font-size: .77rem; }
+    footer span { background: white; padding: 3px 16px; border-radius: 20px;
+                  box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+
+    @media (max-width: 480px) {
+      header h1 { font-size: 1.3rem; }
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span class="icon">🏥</span>
+    <div>
+      <h1>Gestione Sanitaria</h1>
+      <p>Accesso rapido alle applicazioni di gestione</p>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="ph-strip">
+    <div class="ph-field">
+      <span class="ph-lbl">Paziente</span>
+      <span class="ph-val">Alessandro PREVIATI</span>
+    </div>
+    <div class="ph-field">
+      <span class="ph-lbl">Data di nascita</span>
+      <span class="ph-val">12/11/1992</span>
+    </div>
+    <div class="ph-field">
+      <span class="ph-lbl">Codice fiscale</span>
+      <span class="ph-val">PRVLSN92S12D548Q</span>
+    </div>
+  </div>
+
+  <div class="section-title">Applicazioni</div>
+
+  <div class="cards">
+
+    <a class="app-card" href="presidi.html">
+      <div class="card-hdr h-purple">
+        <div class="card-icon">🏥</div>
+        <h2>Presidi e Ausili</h2>
+        <p>Gestione materiali di consumo e dispositivi medici</p>
+      </div>
+      <div class="card-body">
+        <div class="card-foot">
+          <span class="card-tag t-purple">Scorte · Autonomia · Scadenze</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="app-card" href="ventilatore_vivo65.html">
+      <div class="card-hdr h-blue">
+        <div class="card-icon">🫁</div>
+        <h2>Ventilatore Vivo65</h2>
+        <p>Scheda parametri del ventilatore</p>
+      </div>
+      <div class="card-body">
+        <div class="card-foot">
+          <span class="card-tag t-blue">Scorte · Autonomia · Scadenze</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="app-card" href="alimentazione.html">
+      <div class="card-hdr h-orange">
+        <div class="card-icon">🍶</div>
+        <h2>Alimentazione</h2>
+        <p>Gestione nutrizione enterale e materiali correlati</p>
+      </div>
+      <div class="card-body">
+        <div class="card-foot">
+          <span class="card-tag t-orange">Scorte · Autonomia · Scadenze</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="app-card" href="presidi_mc.html">
+      <div class="card-hdr h-teal">
+        <div class="card-icon">🩹</div>
+        <h2>Presidi Medico-Chirurgici</h2>
+        <p>Medicazione, alimentazione enterale, continenza</p>
+      </div>
+      <div class="card-body">
+        <div class="card-foot">
+          <span class="card-tag t-teal">Richieste · Distribuzione Copparo</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="app-card" href="farmaci.html">
+      <div class="card-hdr h-green">
+        <div class="card-icon">💊</div>
+        <h2>Farmaci</h2>
+        <p>Terapia farmacologica e gestione scorte</p>
+      </div>
+      <div class="card-body">
+        <div class="card-foot">
+          <span class="card-tag t-green">Terapia · Scorte</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="app-card" href="farmacie.html">
+      <div class="card-hdr h-red">
+        <div class="card-icon">🏪</div>
+        <h2>Farmacie di turno</h2>
+        <p>Turni settimanali area Copparo · Jolanda · Riva del Po · Tresignana</p>
+      </div>
+      <div class="card-body">
+        <div class="card-foot">
+          <span class="card-tag t-red">Turni 2026 · Settimana corrente</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<footer>
+  <span>Gestione Sanitaria · Alessandro PREVIATI</span>
+</footer>
+
+</body>
+</html>

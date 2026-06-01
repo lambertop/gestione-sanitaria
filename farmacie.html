@@ -8,11 +8,8 @@
   :root {
     --blue-dark: #1F4E79;
     --blue-mid: #2E75B6;
-    --blue-light: #D6E4F0;
     --red: #C00000;
-    --green: #375623;
     --bg: #F5F8FC;
-    --white: #fff;
     --border: #CBD5E0;
     --text: #1a202c;
     --muted: #718096;
@@ -20,117 +17,66 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
 
+  /* ---- Back button ---- */
+  .back-menu-btn {
+    position: fixed; top: 12px; left: 12px; z-index: 9999;
+    background: rgba(255,255,255,0.18); color: white;
+    border: 1.5px solid rgba(255,255,255,0.45);
+    border-radius: 20px; padding: 5px 13px;
+    font-size: .78rem; font-weight: 700; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+    backdrop-filter: blur(4px); transition: background .15s;
+  }
+  .back-menu-btn:hover { background: rgba(255,255,255,0.32); }
+  @media print { .back-menu-btn { display: none !important; } }
+
   header {
     background: var(--blue-dark);
     color: #fff;
-    padding: 18px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    padding: 18px 24px 18px 110px;
+    display: flex; flex-direction: column; gap: 4px;
   }
-  header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: .3px; }
+  header h1 { font-size: 1.15rem; font-weight: 700; }
   header p  { font-size: .78rem; opacity: .75; }
 
   .toolbar {
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    background: #fff; border-bottom: 1px solid var(--border);
+    padding: 10px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
   }
-  .oggi-badge {
-    background: var(--red);
-    color: #fff;
-    font-weight: 700;
-    font-size: .78rem;
-    padding: 4px 12px;
-    border-radius: 20px;
-    white-space: nowrap;
-  }
+  .oggi-badge { background: var(--red); color: #fff; font-weight: 700; font-size: .78rem;
+    padding: 4px 12px; border-radius: 20px; white-space: nowrap; }
   .today-label { font-size: .82rem; color: var(--muted); }
   .spacer { flex: 1; }
-  .btn-scroll {
-    background: var(--blue-dark);
-    color: #fff;
-    border: none;
-    padding: 6px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: .82rem;
-    font-weight: 600;
-  }
+  .btn-scroll { background: var(--blue-dark); color: #fff; border: none;
+    padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: .82rem; font-weight: 600; }
   .btn-scroll:hover { background: var(--blue-mid); }
 
   main { padding: 20px; max-width: 900px; margin: 0 auto; }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--white);
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 1px 6px rgba(0,0,0,.08);
-  }
-  thead th {
-    background: var(--blue-dark);
-    color: #fff;
-    padding: 10px 12px;
-    text-align: center;
-    font-size: .8rem;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-  }
+  table { width: 100%; border-collapse: collapse; background: #fff;
+    border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.08); }
+  thead th { background: var(--blue-dark); color: #fff; padding: 10px 12px;
+    text-align: center; font-size: .8rem; letter-spacing: .5px; text-transform: uppercase; }
   tbody tr { border-bottom: 1px solid #e8edf2; }
   tbody tr:last-child { border-bottom: none; }
-  tbody td {
-    padding: 8px 12px;
-    text-align: center;
-    font-size: .85rem;
-    vertical-align: middle;
-  }
+  tbody td { padding: 8px 12px; text-align: center; font-size: .85rem; vertical-align: middle; }
   .col-week { color: var(--muted); font-size: .78rem; width: 70px; }
   .col-date { width: 110px; font-variant-numeric: tabular-nums; }
   .col-loc  { font-weight: 600; }
 
-  /* Color bands */
-  .c-A { background: #FFF9E6; }
-  .c-B { background: #EFF7EC; }
-  .c-C { background: #EAF4F8; }
-  .c-D { background: #FDF0EF; }
-  .c-E { background: #F2EEF7; }
-  .c-F { background: #FDF3EC; }
-  .c-G { background: #F4F4F4; }
-  .c-H { background: #EDF7ED; }
+  .c-A { background: #FFF9E6; } .c-B { background: #EFF7EC; }
+  .c-C { background: #EAF4F8; } .c-D { background: #FDF0EF; }
+  .c-E { background: #F2EEF7; } .c-F { background: #FDF3EC; }
+  .c-G { background: #F4F4F4; } .c-H { background: #EDF7ED; }
 
-  /* TODAY row */
-  tr.today-row {
-    outline: 3px solid var(--red);
-    outline-offset: -2px;
-    position: relative;
-  }
+  tr.today-row { outline: 3px solid var(--red); outline-offset: -2px; }
   tr.today-row td { background: #fff0f0 !important; }
-  .today-pill {
-    display: inline-block;
-    background: var(--red);
-    color: #fff;
-    font-size: .72rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 10px;
-    margin-left: 6px;
-    vertical-align: middle;
-    white-space: nowrap;
-  }
+  .today-pill { display: inline-block; background: var(--red); color: #fff;
+    font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    margin-left: 6px; vertical-align: middle; white-space: nowrap; }
 
-  .source {
-    text-align: center;
-    color: var(--muted);
-    font-size: .72rem;
-    margin-top: 18px;
-    padding-bottom: 30px;
-  }
+  .source { text-align: center; color: var(--muted); font-size: .72rem;
+    margin-top: 18px; padding-bottom: 30px; }
   .source a { color: var(--blue-mid); }
 
   @media (max-width: 600px) {
@@ -142,13 +88,15 @@
 </head>
 <body>
 
+<a class="back-menu-btn" href="index.html">← Menu</a>
+
 <header>
   <h1>Farmacie di turno</h1>
   <p>Comuni di: Copparo · Jolanda di Savoia · Riva del Po · Tresignana</p>
 </header>
 
 <div class="toolbar">
-  <span class="oggi-badge" id="oggi-badge">◄ OGGI</span>
+  <span class="oggi-badge">◄ OGGI</span>
   <span class="today-label" id="today-label"></span>
   <span class="spacer"></span>
   <button class="btn-scroll" onclick="scrollToToday()">Vai alla settimana corrente</button>
@@ -158,11 +106,7 @@
   <table id="cal">
     <thead>
       <tr>
-        <th>Sett.</th>
-        <th>Dal</th>
-        <th>Al</th>
-        <th>Località 1</th>
-        <th>Località 2</th>
+        <th>Sett.</th><th>Dal</th><th>Al</th><th>Località 1</th><th>Località 2</th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -227,54 +171,30 @@ const weeks = [
   [53,"2026-12-26","2027-01-02","Cologna","Sabbioncello S. Vittore","E"],
 ];
 
-function fmt(iso) {
-  const [y,m,d] = iso.split('-');
-  return `${d}/${m}/${y}`;
-}
-
-const today = new Date();
-today.setHours(0,0,0,0);
+function fmt(iso) { const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+const today = new Date(); today.setHours(0,0,0,0);
 let todayRowEl = null;
-
 const tbody = document.getElementById('tbody');
-weeks.forEach(([wk, from, to, loc1, loc2, cls]) => {
-  const dFrom = new Date(from);
-  const dTo   = new Date(to);
-  const isToday = today >= dFrom && today < dTo;
 
+weeks.forEach(([wk,from,to,loc1,loc2,cls]) => {
+  const dFrom=new Date(from), dTo=new Date(to);
+  const isToday = today>=dFrom && today<dTo;
   const tr = document.createElement('tr');
   tr.className = `c-${cls}` + (isToday ? ' today-row' : '');
-
-  const loc1Html = isToday
-    ? `${loc1} <span class="today-pill">◄ OGGI</span>`
-    : loc1;
-
   tr.innerHTML = `
     <td class="col-week">Sett.&nbsp;${String(wk).padStart(2,'0')}</td>
     <td class="col-date">${fmt(from)}</td>
     <td class="col-date">${fmt(to)}</td>
-    <td class="col-loc">${loc1Html}</td>
-    <td class="col-loc">${loc2}</td>
-  `;
+    <td class="col-loc">${loc1}${isToday?'<span class="today-pill">◄ OGGI</span>':''}</td>
+    <td class="col-loc">${loc2}</td>`;
   tbody.appendChild(tr);
   if (isToday) todayRowEl = tr;
 });
 
-// Toolbar date
-const opts = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
-document.getElementById('today-label').textContent =
-  'Oggi: ' + today.toLocaleDateString('it-IT', opts);
-
-function scrollToToday() {
-  if (todayRowEl) {
-    todayRowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-}
-
-// Auto-scroll on load
-window.addEventListener('load', () => {
-  if (todayRowEl) setTimeout(() => scrollToToday(), 300);
-});
+const opts={weekday:'long',day:'numeric',month:'long',year:'numeric'};
+document.getElementById('today-label').textContent='Oggi: '+today.toLocaleDateString('it-IT',opts);
+function scrollToToday(){ if(todayRowEl) todayRowEl.scrollIntoView({behavior:'smooth',block:'center'}); }
+window.addEventListener('load',()=>{ if(todayRowEl) setTimeout(()=>scrollToToday(),300); });
 </script>
 </body>
 </html>

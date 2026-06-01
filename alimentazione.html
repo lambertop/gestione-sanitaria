@@ -243,9 +243,32 @@
 
     .print-only { display: inline !important; }
   }
+
+  /* ---- Back to menu ---- */
+  .back-menu-btn {
+    position: fixed; top: 12px; left: 12px; z-index: 9999;
+    background: rgba(255,255,255,0.18); color: white;
+    border: 1.5px solid rgba(255,255,255,0.45);
+    border-radius: 20px; padding: 5px 13px;
+    font-size: .78rem; font-weight: 700; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+    backdrop-filter: blur(4px);
+    transition: background .15s;
+  }
+  .back-menu-btn:hover { background: rgba(255,255,255,0.32); }
+  @media print { .back-menu-btn { display: none !important; } }
+
+  /* ---- Readonly mode ---- */
+  .readonly-banner { display: none; background: #e8f4fd; border: 1.5px solid #74b9d8;
+    border-radius: 8px; padding: 8px 14px; margin: 12px 16px; font-size: .83rem; color: #1a5a8a; }
+  body.readonly-mode .readonly-banner { display: block; }
+  body.readonly-mode .edit-only { display: none !important; }
 </style>
 </head>
 <body>
+  <a class="back-menu-btn no-print" href="index.html">← Menu</a>
+  <div class="readonly-banner no-print">👁️ Modalità <strong>sola lettura</strong> — non è possibile apportare modifiche.</div>
+
 
 <header class="no-print">
   <div>
